@@ -51,97 +51,52 @@
   <p id="status">Status: Idle</p>
 
   <script>
-    // 1. Audio Dictionary Mapping (Key Phrase -> Audio Source)
-    // Replace these placeholder URLs with paths to your actual MP3/WebM files
-    const audioMap = [
-      { key: "how are you", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa1.mp3"},
-      { key: "nice to meet you", src: "https://wisdomokubo.github.io/jikoro/copyright/hausa3.m4a" },
-      { key: "where are you from", src: "https://wisdomokubo.github.io/jikoro/copyright/hausa4.m4a" }
-    ];
+      
+// 1. Double-check your actual file paths and extensions (.mp3, .wav, etc.)
+const audioMap = [
+  { key: "how are you", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa1.mp3" },
+  { key: "nice to meet you", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa3.m4a" },
+  { key: "where are you from", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa4.m4a" }
+];
 
-    const statusEl = document.getElementById('status');
-    const textInput = document.getElementById('textInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const micBtn = document.getElementById('micBtn');
+// Reusable audio element prevents memory leaks and handles state better
+const player = new Audio();
 
-    // Currently playing audio instance to prevent overlapping audio
-    let currentAudio = null;
+function processInput(rawText) {
+  const cleanInput = rawText.toLowerCase().trim();
+  statusEl.textContent = `User said: "${rawText}"`;
 
-    // 2. Playback Handler (with Fuzzy Matching & Autoplay Safety)
-    function processInput(rawText) {
-      const cleanInput = rawText.toLowerCase().trim();
-      statusEl.textContent = `User said: "${rawText}"`;
+  // Matches if the phrase contains any of your keys
+  const match = audioMap.find(item => cleanInput.includes(item.key));
 
-      // Find matching entry (fuzzy search: checks if user input contains any key phrase)
-      const match = audioMap.find(item => cleanInput.includes(item.key));
+  if (match) {
+    statusEl.textContent = `Loading audio for "${match.key}"...`;
 
-      if (match) {
-        // Stop currently playing audio if applicable
-        if (currentAudio) {
-          currentAudio.pause();
-          currentAudio.currentTime = 0;
-        }
+    // Stop current playback & set new source
+    player.pause();
+    player.src = match.src;
+    player.load();
 
-        statusEl.textContent = `Matching response found for "${match.key}". Playing audio...`;
+    // Event listener to catch broken paths or network errors
+    player.onerror = () => {
+      const errCode = player.error ? player.error.code : 'Unknown';
+      statusEl.textContent = `File Error (Code ${errCode}): Could not load "${match.src}". Check the file path and format.`;
+    };
 
-        // Create and play audio object
-        currentAudio = new Audio(match.src);
-        currentAudio.play().catch(error => {
-          console.error("Audio playback error:", error);
-          statusEl.textContent = "Error: Click anywhere on the page first to allow audio playback.";
-        });
-      } else {
-        statusEl.textContent = `No audio match found for "${rawText}".`;
-      }
-    }
-
-    // 3. Text Input Handler
-    sendBtn.addEventListener('click', () => {
-      if (textInput.value) {
-        processInput(textInput.value);
-        textInput.value = '';
-      }
+    // Attempt playback
+    player.play().then(() => {
+      statusEl.textContent = `Playing: "${match.key}"`;
+    }).catch(error => {
+      // Displays the REAL error directly from the browser engine
+      console.error("Detailed Error:", error);
+      statusEl.textContent = `Playback Failed: ${error.name} - ${error.message}`;
     });
 
-    textInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && textInput.value) {
-        processInput(textInput.value);
-        textInput.value = '';
-      }
-    });
-
-    // 4. Web Speech API Setup for Real-Time Microphone Listening
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.lang = 'en-US';
-
-      micBtn.addEventListener('click', () => {
-        statusEl.textContent = "Listening...";
-        recognition.start();
-      });
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        processInput(transcript);
-      };
-
-      recognition.onerror = (event) => {
-        statusEl.textContent = `Speech error: ${event.error}`;
-      };
-
-      recognition.onend = () => {
-        if (statusEl.textContent === "Listening...") {
-          statusEl.textContent = "Idle";
-        }
-      };
-    } else {
-      micBtn.disabled = true;
-      micBtn.textContent = "🎤 Voice Recognition Not Supported";
-      statusEl.textContent = "Web Speech API is not supported in this browser. Use text input above.";
-    }
+  } else {
+    statusEl.textContent = `No matching audio found for: "${rawText}"`;
+  }
+}
+    
   </script>
 
 </body>
