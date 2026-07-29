@@ -53,45 +53,32 @@
   <script>
       
 // 1. Double-check your actual file paths and extensions (.mp3, .wav, etc.)
-const audioMap = [
-  { key: "how are you", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa1.mp3" },
-  { key: "nice to meet you", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa3.m4a" },
-  { key: "where are you from", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa4.m4a" }
-];
+const audioMap = {
+  "how are you", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa1.mp3",
+  "nice to meet you", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa3.m4a",
+  "where are you from", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa4.m4a",
+};
 
 // Reusable audio element prevents memory leaks and handles state better
 const player = new Audio();
 
 function processInput(rawText) {
   const cleanInput = rawText.toLowerCase().trim();
-  statusEl.textContent = `User said: "${rawText}"`;
 
-  // Matches if the phrase contains any of your keys
-  const match = audioMap.find(item => cleanInput.includes(item.key));
+  // Find the matching phrase key
+  const matchedKey = Object.keys(audioMap).find(phrase => cleanInput.includes(phrase));
 
-  if (match) {
-    statusEl.textContent = `Loading audio for "${match.key}"...`;
+  if (matchedKey) {
+    const audioSrc = audioMap[matchedKey];
+    statusEl.textContent = `Loading audio for "${matchedKey}"...`;
 
-    // Stop current playback & set new source
     player.pause();
-    player.src = match.src;
+    player.src = audioSrc;
     player.load();
 
-    // Event listener to catch broken paths or network errors
-    player.onerror = () => {
-      const errCode = player.error ? player.error.code : 'Unknown';
-      statusEl.textContent = `File Error (Code ${errCode}): Could not load "${match.src}". Check the file path and format.`;
-    };
-
-    // Attempt playback
-    player.play().then(() => {
-      statusEl.textContent = `Playing: "${match.key}"`;
-    }).catch(error => {
-      // Displays the REAL error directly from the browser engine
-      console.error("Detailed Error:", error);
-      statusEl.textContent = `Playback Failed: ${error.name} - ${error.message}`;
+    player.play().catch(error => {
+      statusEl.textContent = `Playback Failed: ${error.message}`;
     });
-
   } else {
     statusEl.textContent = `No matching audio found for: "${rawText}"`;
   }
