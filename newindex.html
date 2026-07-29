@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice & Text Audio Responder</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 480px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    .card {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      text-align: center;
+    }
+    .input-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+    }
+    input[type="text"]:focus {
+      border-color: #007bff;
+    }
+    button {
+      padding: 12px 18px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #ffffff;
+      background-color: #007bff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    button:active {
+      background-color: #0056b3;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .mic-btn {
+      width: 100%;
+      background-color: #28a745;
+      margin-bottom: 16px;
+    }
+    .mic-btn:active {
+      background-color: #1e7e34;
+    }
+    #status {
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      margin-top: 8px;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Voice & Text Responder</h2>
+    
+    <!-- Text Input -->
+    <div class="input-group">
+      <input type="text" id="textInput" placeholder="Type 'good morning'..." />
+      <button id="sendBtn">Send</button>
+    </div>
+
+    <!-- Voice Input -->
+    <button id="micBtn" class="mic-btn">🎤 Speak</button>
+
+    <p id="status">Status: Idle</p>
+  </div>
+
+  <script>
+    // 1. Audio Mapping
+    // Use relative paths for GitHub Pages compatibility (e.g., "./audio/good-morning.mp3")
+    const audioMap = [
+      { key: "how are you", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa1.mp3" },
+      { key: "good evening", src: "./audio/good-evening.mp3" },
+      { key: "hello", src: "./audio/hello.mp3" }
+    ];
+
+    const statusEl = document.getElementById('status');
+    const textInput = document.getElementById('textInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+
+    // Shared global audio object used to bypass mobile autoplay restrictions
+    const globalAudio = new Audio();
+
+    // --- MOBILE AUTOPLAY UNLOCKER ---
+    // Plays a silent data URI buffer on user tap to pre-authorize the audio context on iOS/Android
+    function unlockMobileAudio() {
+      globalAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+      globalAudio.play().then(() => {
+        globalAudio.pause();
+      }).catch(e => console.log("Audio unlock muted/failed:", e));
+    }
+
+    // 2. Playback Function
+    function processInput(rawText) {
+      const cleanInput = rawText.toLowerCase().trim();
+      statusEl.textContent = `User said: "${rawText}"`;
+
+      // Search for key phrase match
+      const match = audioMap.find(item => cleanInput.includes(item.key));
+
+      if (match) {
+        statusEl.textContent = `Playing audio for "${match.key}"...`;
+        
+        // Reuse globalAudio object so mobile browsers won't block asynchronous playback
+        globalAudio.src = match.src;
+        globalAudio.play().catch(error => {
+          console.error("Playback failed:", error);
+          statusEl.textContent = "Error playing audio. Check file paths or tap screen again.";
+        });
+      } else {
+        statusEl.textContent = `No audio match found for "${rawText}".`;
+      }
+    }
+
+    // 3. Touch Event Handlers
+    micBtn.addEventListener('click', () => {
+      unlockMobileAudio();
+      
+      if (recognition) {
+        statusEl.textContent = "Listening...";
+        try {
+          recognition.start();
+        } catch (err) {
+          console.warn("Recognition already started or error:", err);
+        }
+      }
+    });
+
+    sendBtn.addEventListener('click', () => {
+      unlockMobileAudio();
+      if (textInput.value) {
+        processInput(textInput.value);
+        textInput.value = '';
+      }
+    });
+
+    textInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        unlockMobileAudio();
+        if (textInput.value) {
+          processInput(textInput.value);
+          textInput.value = '';
+        }
+      }
+    });
+
+    // 4. Web Speech API Setup
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        processInput(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        statusEl.textContent = `Speech recognition error: ${event.error}`;
+      };
+
+      recognition.onend = () => {
+        if (statusEl.textContent === "Listening...") {
+          statusEl.textContent = "Idle";
+        }
+      };
+    } else {
+      micBtn.disabled = true;
+      micBtn.textContent = "🎤 Voice Not Supported";
+      statusEl.textContent = "Your browser does not support speech recognition. Use text input above.";
+    }
+  </script>
+
+</body>
+</html>
