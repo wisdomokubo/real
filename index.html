@@ -3,146 +3,285 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voice & Text Audio Responder</title>
+  <title>Language Search Bar</title>
   <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-surface: #ffffff;
+      --border-color: #cbd5e1;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --highlight: #f1f5f9;
+    }
+
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      max-width: 500px;
-      margin: 50px auto;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-    .input-group {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f8fafc;
       display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
+      justify-content: center;
+      padding-top: 100px;
+      margin: 0;
     }
-    input[type="text"] {
+
+    .search-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: var(--bg-surface);
+      border: 2px solid var(--border-color);
+      border-radius: 28px;
+      padding: 6px 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease;
+    }
+
+    .search-box:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+    }
+
+    .search-input {
       flex: 1;
-      padding: 10px;
-      font-size: 16px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      padding: 8px 12px;
+      color: var(--text-main);
+      background: transparent;
     }
-    button {
-      padding: 10px 15px;
-      font-size: 16px;
+
+    .icon-btn {
+      background: none;
+      border: none;
       cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: background 0.2s, color 0.2s;
     }
-    #status {
-      font-size: 14px;
-      color: #555;
-      margin-top: 10px;
+
+    .icon-btn:hover {
+      background: #f1f5f9;
+      color: var(--text-main);
+    }
+
+    /* Listening state for Voice Button */
+    .icon-btn.listening {
+      color: #ef4444;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    /* Results Dropdown */
+    .results-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      list-style: none;
+      padding: 8px 0;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      max-height: 240px;
+      overflow-y: auto;
+      display: none;
+      z-index: 10;
+    }
+
+    .results-list.active {
+      display: block;
+    }
+
+    .result-item {
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .result-item:hover, .result-item.selected {
+      background-color: var(--highlight);
+      color: var(--primary);
+    }
+
+    .no-results {
+      padding: 12px 20px;
+      color: var(--text-muted);
+      font-style: italic;
     }
   </style>
 </head>
 <body>
 
-  <h2>Interactive Audio Trigger</h2>
-  
-  <!-- Text Input Fallback / Alternative -->
-  <div class="input-group">
-    <input type="text" id="textInput" placeholder="Type 'good morning' or click mic..." />
-    <button id="sendBtn">Send</button>
+  <div class="search-wrapper">
+    <div class="search-box">
+      <!-- Search Icon -->
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+      
+      <input type="text" id="searchInput" class="search-input" placeholder="Search a language..." autocomplete="off">
+      
+      <!-- Voice Search Button -->
+      <button id="micBtn" class="icon-btn" title="Search with voice" aria-label="Voice Search">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Dropdown menu (Hidden initially) -->
+    <ul id="resultsList" class="results-list"></ul>
   </div>
 
-  <!-- Speech Input -->
-  <button id="micBtn">🎤 Speak</button>
-
-  <p id="status">Status: Idle</p>
-
   <script>
-    // 1. Audio Dictionary Mapping (Key Phrase -> Audio Source)
-    // Replace these placeholder URLs with paths to your actual MP3/WebM files
-    const audioMap = [
-      { key: "how are you", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa1.mp3" },
-      { key: "nice to meet you", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa3.m4a" },
-      { key: "where are you from", src: "https://wisdomokubo1.github.io/jikoro/copyright/hausa4.m4a" }
+    // 1. Hidden Data Source mapping languages to their respective target HTML pages
+    const languageData = [
+      { name: "Hausa", url: "https://wisdomokubo.github.io/real/hausa.html" },
+      { name: "Yoruba", url: "https://wisdomokubo.github.io/real/yoruba.html" },
+      { name: "Igbo", url: "https://wisdomokubo.github.io/real/igbo.html" },
+      { name: "Degema", url: "https://wisdomokubo.github.io/real/degema.html" },
+      { name: "Spanish", url: "https://wisdomokubo.github.io/real/spanish.html" },
+      { name: "French", url: "https://wisdomokubo.github.io/real/french.html" }
     ];
 
-    const statusEl = document.getElementById('status');
-    const textInput = document.getElementById('textInput');
-    const sendBtn = document.getElementById('sendBtn');
+    const searchInput = document.getElementById('searchInput');
+    const resultsList = document.getElementById('resultsList');
     const micBtn = document.getElementById('micBtn');
 
-    // Currently playing audio instance to prevent overlapping audio
-    let currentAudio = null;
-
-    // 2. Playback Handler (with Fuzzy Matching & Autoplay Safety)
-    function processInput(rawText) {
-      const cleanInput = rawText.toLowerCase().trim();
-      statusEl.textContent = `User said: "${rawText}"`;
-
-      // Find matching entry (fuzzy search: checks if user input contains any key phrase)
-      const match = audioMap.find(item => cleanInput.includes(item.key));
-
-      if (match) {
-        // Stop currently playing audio if applicable
-        if (currentAudio) {
-          currentAudio.pause();
-          currentAudio.currentTime = 0;
-        }
-
-        statusEl.textContent = `Matching response found for "${match.key}". Playing audio...`;
-
-        // Create and play audio object
-        currentAudio = new Audio(match.src);
-        currentAudio.play().catch(error => {
-          console.error("Audio playback error:", error);
-          statusEl.textContent = "Error: Click anywhere on the page first to allow audio playback.";
-        });
-      } else {
-        statusEl.textContent = `No audio match found for "${rawText}".`;
-      }
+    // Helper: Navigate to target URL
+    function navigateTo(url) {
+      window.location.href = url;
     }
 
-    // 3. Text Input Handler
-    sendBtn.addEventListener('click', () => {
-      if (textInput.value) {
-        processInput(textInput.value);
-        textInput.value = '';
+    // 2. Filter logic for search input
+    function filterLanguages(query) {
+      const cleanQuery = query.trim().toLowerCase();
+      if (!cleanQuery) {
+        resultsList.classList.remove('active');
+        resultsList.innerHTML = '';
+        return [];
+      }
+
+      const matches = languageData.filter(item => 
+        item.name.toLowerCase().includes(cleanQuery)
+      );
+
+      renderResults(matches);
+      return matches;
+    }
+
+    // 3. Render dropdown suggestions
+    function renderResults(results) {
+      resultsList.innerHTML = '';
+      
+      if (results.length === 0) {
+        const noResultEl = document.createElement('li');
+        noResultEl.className = 'no-results';
+        noResultEl.textContent = 'No matching language found';
+        resultsList.appendChild(noResultEl);
+      } else {
+        results.forEach(item => {
+          const li = document.createElement('li');
+          li.className = 'result-item';
+          li.textContent = item.name;
+          
+          // Click handler to navigate
+          li.addEventListener('click', () => navigateTo(item.url));
+          resultsList.appendChild(li);
+        });
+      }
+
+      resultsList.classList.add('active');
+    }
+
+    // Search Input Event Listeners
+    searchInput.addEventListener('input', (e) => filterLanguages(e.target.value));
+
+    // Close dropdown on click outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-wrapper')) {
+        resultsList.classList.remove('active');
       }
     });
 
-    textInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && textInput.value) {
-        processInput(textInput.value);
-        textInput.value = '';
-      }
-    });
-
-    // 4. Web Speech API Setup for Real-Time Microphone Listening
+    // 4. Web Speech API Integration for Voice Search
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.lang = 'en-US';
+      recognition.interimResults = false;
 
       micBtn.addEventListener('click', () => {
-        statusEl.textContent = "Listening...";
-        recognition.start();
+        if (micBtn.classList.contains('listening')) {
+          recognition.stop();
+        } else {
+          recognition.start();
+        }
       });
 
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        processInput(transcript);
-      };
-
-      recognition.onerror = (event) => {
-        statusEl.textContent = `Speech error: ${event.error}`;
+      recognition.onstart = () => {
+        micBtn.classList.add('listening');
+        searchInput.placeholder = "Listening...";
       };
 
       recognition.onend = () => {
-        if (statusEl.textContent === "Listening...") {
-          statusEl.textContent = "Idle";
+        micBtn.classList.remove('listening');
+        searchInput.placeholder = "Search a language...";
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.trim();
+        // Remove trailing periods often added by speech recognition
+        const cleanTranscript = transcript.replace(/\.$/, ''); 
+        
+        searchInput.value = cleanTranscript;
+        
+        const matches = filterLanguages(cleanTranscript);
+
+        // If voice input exactly matches a language name, navigate immediately
+        const exactMatch = matches.find(
+          item => item.name.toLowerCase() === cleanTranscript.toLowerCase()
+        );
+
+        if (exactMatch) {
+          navigateTo(exactMatch.url);
         }
       };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error: ", event.error);
+        micBtn.classList.remove('listening');
+        searchInput.placeholder = "Search a language...";
+      };
+
     } else {
-      micBtn.disabled = true;
-      micBtn.textContent = "🎤 Voice Recognition Not Supported";
-      statusEl.textContent = "Web Speech API is not supported in this browser. Use text input above.";
+      // Disable mic button if Web Speech API isn't supported by browser
+      micBtn.style.display = 'none';
+      console.warn("Speech Recognition API is not supported in this browser.");
     }
   </script>
-
 </body>
 </html>
