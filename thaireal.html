@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sophia AI Languages Tutor</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #status {
+      font-size: 14px;
+      color: #555;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+ <h1>Explore Asia</h1>
+  <h2>Thai Translator</h2>
+  
+  <!-- Text Input Fallback / Alternative -->
+  <div class="input-group">
+    <input type="text" id="textInput" placeholder="Type words or tap the mic...
+    " />
+    <button id="sendBtn">Send</button>
+  </div>
+
+  <!-- Speech Input -->
+      <button id="micBtn" class="icon-btn" title="Search with voice" aria-label="Voice Search">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+        </svg>
+      </button>
+  <p id="status">Status: Idle</p>
+  
+
+  <script>
+    // 1. Audio Dictionary Mapping (Key Phrase -> Audio Source)
+    // Replace these placeholder URLs with paths to your actual MP3/WebM files
+    const audioMap = [
+    { key: "how are you", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai1.wav" },
+    { key: "what's up", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai2.wav" },
+    { key: "nice to meet you", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai3.wav" },
+    { key: "where are you from", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai4.wav" },
+    { key: "how's it going", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai5.wav" },
+    { key: "what do you do", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai6.wav" },
+    { key: "i don't know", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai7.wav" },
+    { key: "that's interesting", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai8.wav" },
+    { key: "i agree", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai9.wav" },
+    { key: "i disagree", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai10.wav" },
+    
+    { key: "excuse me", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai11.wav" },
+    { key: "sorry", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai12.wav" },
+    { key: "please", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai13.wav" },
+    { key: "thank you", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai14.wav" },
+    { key: "you're welcome", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai15.wav" },
+    { key: "can you help me", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai16.wav" },
+    { key: "what's your name", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai17.wav" },
+    { key: "see you later", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai18.wav" },
+    { key: "take care", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai19.wav" },
+    { key: "goodbye", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai20.wav" },
+    
+    { key: "have a great day", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai21.wav" },
+    { key: "i am sorry to hear that", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai22.wav" },
+    { key: "no problem", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai23.wav" },
+    { key: "what's new", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai24.wav" },
+    { key: "how was your day", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai25.wav" },
+    { key: "i'm fine, thank you", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai26.wav" },
+    { key: "it's a pleasure", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai27.wav" },
+    { key: "how's the weather", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai28.wav" },
+    { key: "where do you live", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai29.wav" },
+    { key: "what's your favorite", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai30.wav" },
+    
+    { key: "i don't understand", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai31.wav" },
+    { key: "could you repeat that", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai32.wav" },
+    { key: "never mind", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai33.wav" },
+    { key: "i'm not sure", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai34.wav" },
+    { key: "what time is it", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai35.wav" },
+    { key: "let me think", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai36.wav" },
+    { key: "that's a good idea", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai37.wav" },
+    { key: "i'm not feeling well", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai38.wav" },
+    { key: "what's the matter", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai39.wav" },
+    { key: "it's a long story", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai40.wav" },
+    
+    { key: "what's on your mind", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai41.wav" },
+    { key: "tell me more", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai42.wav" },
+    { key: "i'm really busy", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai43.wav" },
+    { key: "congratulations", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai44.wav" },
+    { key: "i appreciate that", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai45.wav" },
+    { key: "do you like", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai46.wav" },
+    { key: "how about you", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai47.wav" },
+    { key: "it's up to you", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai48.wav" },
+    { key: "i'm just kidding", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai49.wav" },
+    { key: "that's funny", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai50.wav" },
+    
+    { key: "i'm hungry", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai51.wav" },
+    { key: "i'm thirsty", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai52.wav" },
+    { key: "can i have", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai53.wav" },
+    { key: "what's for dinner", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai54.wav" },
+    { key: "it's delicious", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai55.wav" },
+    { key: "i love it", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai56.wav" },
+    { key: "i don't like it", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai57.wav" },
+    { key: "what's the price", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai58.wav" },
+    { key: "where's the bathroom", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai59.wav" },
+    { key: "i need a favor", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai60.wav" },
+    
+    { key: "i'm lost", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai61.wav" },
+    { key: "can you show me", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai62.wav" },
+    { key: "i'm excited", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai63.wav" },
+    { key: "i'm tired", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai64.wav" },
+    { key: "i'm bored", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai65.wav" },
+    { key: "let's hang out", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai66.wav" },
+    { key: "what's your hobby", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai67.wav" },
+    { key: "do you have pets", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai68.wav" },
+    { key: "i miss you", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai69.wav" },
+    { key: "i'm sorry for your loss", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai70.wav" },
+    
+    { key: "what's the latest news", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai71.wav" },
+    { key: "how was your weekend", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai72.wav" },
+    { key: "long time no see", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai73.wav" },
+    { key: "it's a small world", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai74.wav" },
+    { key: "i can't believe it", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai75.wav" },
+    { key: "i'm proud of you", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai76.wav" },
+    { key: "i'm not interested", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai77.wav" },
+    { key: "what's the plan", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai78.wav" },
+    { key: "let's do it", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai79.wav" },
+    { key: "goodluck", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai80.wav" },
+    
+    { key: "take it easy", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai81.wav" },
+    { key: "that's awesome", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai82.wav" },
+    { key: "that's terrible", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai83.wav" },
+    { key: "what a coincidence", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai84.wav" },
+    { key: "i don't care", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai85.wav" },
+    { key: "never give up", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai86.wav" },
+    { key: "i can't wait", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai87.wav" },
+    { key: "let's make a deal", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai88.wav" },
+    { key: "i'm not sure", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai89.wav" },
+    { key: "trust me", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai90.wav" },
+    
+    { key: "i have a question", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai91.wav" },
+    { key: "what's the problem", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai92.wav" },
+    { key: "are you serious", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai93.wav" },
+    { key: "i'm impressed", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai94.wav" },
+    { key: "that's fantastic", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai95.wav" },
+    { key: "how did you do that", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai96.wav" },
+    { key: "you're kidding", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai97.wav" },
+    { key: "i'm not ready", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai98.wav" },
+    { key: "it depends", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai99.wav" },
+    { key: "it's complicated", src: "https://wisdomokubo1.github.io/jikoro/copyright/thai100.wav" },
+    ];
+
+    const statusEl = document.getElementById('status');
+    const textInput = document.getElementById('textInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+
+    // Currently playing audio instance to prevent overlapping audio
+    let currentAudio = null;
+
+    // 2. Playback Handler (with Fuzzy Matching & Autoplay Safety)
+    function processInput(rawText) {
+      const cleanInput = rawText.toLowerCase().trim();
+      statusEl.textContent = `User said: "${rawText}"`;
+
+      // Find matching entry (fuzzy search: checks if user input contains any key phrase)
+      const match = audioMap.find(item => cleanInput.includes(item.key));
+
+      if (match) {
+        // Stop currently playing audio if applicable
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+        }
+
+        statusEl.textContent = `Matching and Playing audio...`;
+
+        // Create and play audio object
+        currentAudio = new Audio(match.src);
+        currentAudio.play().catch(error => {
+          console.error("Audio playback error:", error);
+          statusEl.textContent = "Error: Click anywhere on the page first to allow audio playback.";
+        });
+      } else {
+        statusEl.textContent = `No audio match found for "${rawText}".`;
+      }
+    }
+
+    // 3. Text Input Handler
+    sendBtn.addEventListener('click', () => {
+      if (textInput.value) {
+        processInput(textInput.value);
+        textInput.value = '';
+      }
+    });
+
+    textInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && textInput.value) {
+        processInput(textInput.value);
+        textInput.value = '';
+      }
+    });
+
+    // 4. Web Speech API Setup for Real-Time Microphone Listening
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = 'en-US';
+
+      micBtn.addEventListener('click', () => {
+        statusEl.textContent = "Listening...";
+        recognition.start();
+      });
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        processInput(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        statusEl.textContent = `Speech error: ${event.error}`;
+      };
+
+      recognition.onend = () => {
+        if (statusEl.textContent === "Listening...") {
+          statusEl.textContent = "Idle";
+        }
+      };
+    } else {
+      micBtn.disabled = true;
+      micBtn.textContent = "🎤 Voice Recognition Not Supported";
+      statusEl.textContent = "Web Speech API is not supported in this browser. Use text input above.";
+    }
+  </script>
+
+</body>
+</html>
