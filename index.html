@@ -55,6 +55,43 @@
       color: var(--text-main);
       background: transparent;
     }
+    
+    .round-image-button {
+  /* Set the exact dimensions you want */
+  width: 35px;
+  height: 35px;
+  
+  /* Reset default button styles */
+  border: none;
+  background-color: transparent;
+  padding: 0;
+  
+  /* Make it perfectly round and contain the image */
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  
+  /* Optional: Add a subtle shadow and transition for interactivity */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+/* Optional: Slight zoom effect when hovering */
+.round-image-button:hover {
+  transform: scale(1.05);
+}
+
+.round-image-button img {
+  /* Make the image take up the full space of the button */
+  width: 100%;
+  height: 100%;
+  
+  /* Ensure the image fills the circle without getting distorted/stretched */
+  object-fit: cover;
+  
+  /* Remove default image spacing */
+  display: block;
+}
 
     .icon-btn {
       background: none;
@@ -135,7 +172,9 @@
 
   <div class="search-wrapper">
     <div class="search-box">
-    <img src="https://wisdomokubo.github.io/real/sophiabot.png" style="width="35" height="35" fill="none" border-radius: "50%" object-fit: "cover">
+    <button class="round-image-button">
+        <img src="https://wisdomokubo.github.io/real/sophiagold.png" >
+    </button>
       <!-- Search Icon -->
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
 
