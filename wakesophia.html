@@ -11,11 +11,27 @@
         .triggered { background: #f8d7da !important; color: #721c24; font-weight: bold; }
         .speaking { background: #cce5ff !important; color: #004085; }
         #responseOutput { margin-top: 15px; padding: 10px; border: 1px solid #ccc; min-height: 50px; }
+        
+        /* New styling for our dynamic link button */
+        #navigateLink {
+            display: none; 
+            margin-top: 20px; 
+            padding: 12px 20px; 
+            background: #007bff; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+        }
+        #navigateLink:hover {
+            background: #0056b3;
+        }
     </style>
 </head>
 <body>
 
-    <h2>Browser Voice Assistant</h2>
+    <h2>Sophia AI</h2>
     <p>Click start, allow microphone access, and say <strong>"Hello Sophia"</strong>.</p>
     
     <button id="startBtn">Start Listening</button>
@@ -26,6 +42,9 @@
     
     <h3>User Request:</h3>
     <div id="responseOutput"></div>
+
+    <!-- The hidden button that will appear when a language is matched -->
+    <a id="navigateLink" href="#" target="_blank">Open Language</a>
 
     <script>
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -44,10 +63,19 @@
             const statusDiv = document.getElementById('status');
             const transcriptOutput = document.getElementById('transcriptOutput');
             const responseOutput = document.getElementById('responseOutput');
+            const navigateLink = document.getElementById('navigateLink');
             
             let isListening = false;
             let isAwaitingResponse = false; 
             const WAKE_WORD = "hello sophia";
+
+            const languageLinks = {
+                "spanish": "https://wisdomokubo.github.io/real/spanishreal.html",
+                "french": "https://wisdomokubo.github.io/real/frenchreal.html",
+                "igbo": "https://wisdomokubo.github.io/real/igboreal.html",
+                "hausa": "https://wisdomokubo.github.io/real/hausareal.html",
+                "yoruba": "https://wisdomokubo.github.io/real/yorubareal.html"
+            };
 
             startBtn.addEventListener('click', () => {
                 startListening();
@@ -70,15 +98,15 @@
                 }
             }
 
-            // Function to handle the robot speaking
             function speakPrompt(text) {
-                // Stop the microphone while the computer is talking so it doesn't hear itself
                 recognition.stop();
                 updateUI('speaking', 'Assistant is speaking...');
                 
+                // Hide the button again when starting a new query
+                navigateLink.style.display = "none";
+                
                 const utterance = new SpeechSynthesisUtterance(text);
                 
-                // When the speech finishes, change state and start listening for the response
                 utterance.onend = () => {
                     isAwaitingResponse = true;
                     responseOutput.textContent = "Listening for your response...";
@@ -87,6 +115,44 @@
                 };
 
                 synth.speak(utterance);
+            }
+
+            function handleLanguageRouting(transcript) {
+                let foundLanguage = null;
+                
+                for (const lang in languageLinks) {
+                    if (transcript.includes(lang)) {
+                        foundLanguage = lang;
+                        break;
+                    }
+                }
+
+                if (foundLanguage) {
+                    console.log(`Matched language: ${foundLanguage}`);
+                    updateUI('listening', `Ready to open page for ${foundLanguage}.`);
+                    
+                    // Update the link properties and show it
+                    const targetUrl = languageLinks[foundLanguage];
+                    navigateLink.href = targetUrl;
+                    
+                    // Capitalize the first letter for the button text
+                    const formattedLang = foundLanguage.charAt(0).toUpperCase() + foundLanguage.slice(1);
+                    navigateLink.textContent = `Open ${formattedLang}`;
+                    navigateLink.style.display = "inline-block";
+                    
+                    // Tell the user to click the button
+                    const confirmUtterance = new SpeechSynthesisUtterance(`I found ${foundLanguage}. Click the button to open it.`);
+                    synth.speak(confirmUtterance);
+                    
+                } else {
+                    console.log("No matching language found in:", transcript);
+                    updateUI('listening', 'Language not recognized. Returning to wake word mode...');
+                    
+                    navigateLink.style.display = "none";
+                    
+                    const errorUtterance = new SpeechSynthesisUtterance(`I don't have a link for that language.`);
+                    synth.speak(errorUtterance);
+                }
             }
 
             recognition.onresult = (event) => {
@@ -101,22 +167,14 @@
                 }
                 
                 if (isAwaitingResponse) {
-                    // We are capturing the user's actual request
                     responseOutput.textContent = currentTranscript;
                     
                     if (isFinal) {
-                        // The user finished their sentence
                         isAwaitingResponse = false;
-                        updateUI('listening', 'Command received. Returning to wake word mode...');
-                        
-                        // TODO: Send currentTranscript to your AI translation backend here
-                        console.log("SEND TO BACKEND:", currentTranscript);
-                        
-                        // Reset the transcript output
+                        handleLanguageRouting(currentTranscript.trim());
                         transcriptOutput.textContent = "Waiting for wake word...";
                     }
                 } else {
-                    // We are just listening for the wake word
                     transcriptOutput.textContent = `Heard: "${currentTranscript}"`;
 
                     if (currentTranscript.includes(WAKE_WORD)) {
@@ -126,7 +184,6 @@
             };
 
             recognition.onend = () => {
-                // If we are supposed to be listening (and the computer isn't currently speaking), restart
                 if (isListening && !synth.speaking) {
                     recognition.start();
                 }
