@@ -9,31 +9,33 @@
         #status { padding: 10px; margin-top: 20px; border-radius: 5px; background: #eee; }
         .listening { background: #d4edda !important; color: #155724; }
         .triggered { background: #f8d7da !important; color: #721c24; font-weight: bold; }
+        .speaking { background: #cce5ff !important; color: #004085; }
+        #responseOutput { margin-top: 15px; padding: 10px; border: 1px solid #ccc; min-height: 50px; }
     </style>
 </head>
 <body>
 
-    <h2>Wake Sophia Test</h2>
+    <h2>Browser Voice Assistant</h2>
     <p>Click start, allow microphone access, and say <strong>"Hello Sophia"</strong>.</p>
     
     <button id="startBtn">Start Listening</button>
     <button id="stopBtn" disabled>Stop</button>
 
     <div id="status">Microphone off.</div>
-    <div id="transcriptOutput" style="margin-top: 15px; color: #555;"></div>
+    <div id="transcriptOutput" style="margin-top: 15px; color: #555;">Waiting for wake word...</div>
+    
+    <h3>User Request:</h3>
+    <div id="responseOutput"></div>
 
     <script>
-        // Check for browser support (Chrome/Edge use webkit prefix)
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const synth = window.speechSynthesis;
         
-        if (!SpeechRecognition) {
-            alert("Your browser does not support the Web Speech API. Please use Chrome or Edge.");
+        if (!SpeechRecognition || !synth) {
+            alert("Your browser does not fully support the Web Speech API.");
         } else {
             const recognition = new SpeechRecognition();
-            
-            // continuous = true keeps the mic open after a pause
             recognition.continuous = true; 
-            // interimResults = true lets us analyze words as they are being spoken
             recognition.interimResults = true; 
             recognition.lang = 'en-US';
 
@@ -41,61 +43,91 @@
             const stopBtn = document.getElementById('stopBtn');
             const statusDiv = document.getElementById('status');
             const transcriptOutput = document.getElementById('transcriptOutput');
+            const responseOutput = document.getElementById('responseOutput');
             
             let isListening = false;
-            const WAKE_WORD = "hello Sophia";
+            let isAwaitingResponse = false; 
+            const WAKE_WORD = "hello sophia";
 
             startBtn.addEventListener('click', () => {
+                startListening();
+            });
+
+            stopBtn.addEventListener('click', () => {
+                isListening = false;
+                isAwaitingResponse = false;
+                recognition.stop();
+                updateUI('off', 'Microphone off.');
+            });
+
+            function startListening() {
                 try {
                     recognition.start();
                     isListening = true;
                     updateUI('listening', 'Listening for wake word...');
                 } catch(e) {
-                    console.log("Already started.");
+                    // Ignore errors if it's already started
                 }
-            });
+            }
 
-            stopBtn.addEventListener('click', () => {
-                isListening = false;
+            // Function to handle the robot speaking
+            function speakPrompt(text) {
+                // Stop the microphone while the computer is talking so it doesn't hear itself
                 recognition.stop();
-                updateUI('off', 'Microphone off.');
-            });
+                updateUI('speaking', 'Assistant is speaking...');
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // When the speech finishes, change state and start listening for the response
+                utterance.onend = () => {
+                    isAwaitingResponse = true;
+                    responseOutput.textContent = "Listening for your response...";
+                    startListening();
+                    updateUI('triggered', 'Listening for your command...');
+                };
 
-            // Process the audio results as they come in
+                synth.speak(utterance);
+            }
+
             recognition.onresult = (event) => {
                 let currentTranscript = "";
+                let isFinal = false;
                 
-                // Loop through the results to build the transcript
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     currentTranscript += event.results[i][0].transcript.toLowerCase();
+                    if (event.results[i].isFinal) {
+                        isFinal = true;
+                    }
                 }
                 
-                transcriptOutput.textContent = `Heard: "${currentTranscript}"`;
+                if (isAwaitingResponse) {
+                    // We are capturing the user's actual request
+                    responseOutput.textContent = currentTranscript;
+                    
+                    if (isFinal) {
+                        // The user finished their sentence
+                        isAwaitingResponse = false;
+                        updateUI('listening', 'Command received. Returning to wake word mode...');
+                        
+                        // TODO: Send currentTranscript to your AI translation backend here
+                        console.log("SEND TO BACKEND:", currentTranscript);
+                        
+                        // Reset the transcript output
+                        transcriptOutput.textContent = "Waiting for wake word...";
+                    }
+                } else {
+                    // We are just listening for the wake word
+                    transcriptOutput.textContent = `Heard: "${currentTranscript}"`;
 
-                // Check if the wake word is in the transcript
-                if (currentTranscript.includes(WAKE_WORD)) {
-                    updateUI('triggered', 'Wake Word Detected! Activating assistant...');
-                    
-                    // Stop listening briefly to handle the action, then restart
-                    recognition.stop();
-                    
-                    // TODO: Trigger your application logic here (e.g., play an audio file, ping an LLM)
-                    
-                    // Reset after 3 seconds
-                    setTimeout(() => {
-                        if (isListening) {
-                            recognition.start();
-                            updateUI('listening', 'Listening for wake word...');
-                        }
-                    }, 3000);
+                    if (currentTranscript.includes(WAKE_WORD)) {
+                        speakPrompt("What Language do you want to Translate?");
+                    }
                 }
             };
 
-            // Browsers will often auto-stop the recognition after a period of silence.
-            // This event catches that and immediately restarts it to keep the "hotword" active.
             recognition.onend = () => {
-                if (isListening) {
-                    console.log("Auto-restarting speech recognition...");
+                // If we are supposed to be listening (and the computer isn't currently speaking), restart
+                if (isListening && !synth.speaking) {
                     recognition.start();
                 }
             };
