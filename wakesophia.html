@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wake Sophia Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 2rem; max-width: 600px; }
+        #status { padding: 10px; margin-top: 20px; border-radius: 5px; background: #eee; }
+        .listening { background: #d4edda !important; color: #155724; }
+        .triggered { background: #f8d7da !important; color: #721c24; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>Wake Sophia Test</h2>
+    <p>Click start, allow microphone access, and say <strong>"Hello Sophia"</strong>.</p>
+    
+    <button id="startBtn">Start Listening</button>
+    <button id="stopBtn" disabled>Stop</button>
+
+    <div id="status">Microphone off.</div>
+    <div id="transcriptOutput" style="margin-top: 15px; color: #555;"></div>
+
+    <script>
+        // Check for browser support (Chrome/Edge use webkit prefix)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            alert("Your browser does not support the Web Speech API. Please use Chrome or Edge.");
+        } else {
+            const recognition = new SpeechRecognition();
+            
+            // continuous = true keeps the mic open after a pause
+            recognition.continuous = true; 
+            // interimResults = true lets us analyze words as they are being spoken
+            recognition.interimResults = true; 
+            recognition.lang = 'en-US';
+
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const statusDiv = document.getElementById('status');
+            const transcriptOutput = document.getElementById('transcriptOutput');
+            
+            let isListening = false;
+            const WAKE_WORD = "hello Sophia";
+
+            startBtn.addEventListener('click', () => {
+                try {
+                    recognition.start();
+                    isListening = true;
+                    updateUI('listening', 'Listening for wake word...');
+                } catch(e) {
+                    console.log("Already started.");
+                }
+            });
+
+            stopBtn.addEventListener('click', () => {
+                isListening = false;
+                recognition.stop();
+                updateUI('off', 'Microphone off.');
+            });
+
+            // Process the audio results as they come in
+            recognition.onresult = (event) => {
+                let currentTranscript = "";
+                
+                // Loop through the results to build the transcript
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    currentTranscript += event.results[i][0].transcript.toLowerCase();
+                }
+                
+                transcriptOutput.textContent = `Heard: "${currentTranscript}"`;
+
+                // Check if the wake word is in the transcript
+                if (currentTranscript.includes(WAKE_WORD)) {
+                    updateUI('triggered', 'Wake Word Detected! Activating assistant...');
+                    
+                    // Stop listening briefly to handle the action, then restart
+                    recognition.stop();
+                    
+                    // TODO: Trigger your application logic here (e.g., play an audio file, ping an LLM)
+                    
+                    // Reset after 3 seconds
+                    setTimeout(() => {
+                        if (isListening) {
+                            recognition.start();
+                            updateUI('listening', 'Listening for wake word...');
+                        }
+                    }, 3000);
+                }
+            };
+
+            // Browsers will often auto-stop the recognition after a period of silence.
+            // This event catches that and immediately restarts it to keep the "hotword" active.
+            recognition.onend = () => {
+                if (isListening) {
+                    console.log("Auto-restarting speech recognition...");
+                    recognition.start();
+                }
+            };
+
+            function updateUI(state, message) {
+                statusDiv.textContent = message;
+                statusDiv.className = state;
+                startBtn.disabled = (state !== 'off');
+                stopBtn.disabled = (state === 'off');
+            }
+        }
+    </script>
+</body>
+</html>
