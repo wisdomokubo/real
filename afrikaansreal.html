@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sophia AI Languages Tutor</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #status {
+      font-size: 14px;
+      color: #555;
+      margin-top: 10px;
+    }
+  </style>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-180524052-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'UA-180524052-1');
+  </script>
+</head>
+<body>
+
+ <h1>Explore Africa</h1>
+  <h2>Afrikaans Translator</h2>
+  
+  <!-- Text Input Fallback / Alternative -->
+  <div class="input-group">
+    <input type="text" id="textInput" placeholder="Type words or tap the mic...
+    " />
+    <button id="sendBtn">Send</button>
+  </div>
+
+  <!-- Speech Input -->
+      <button id="micBtn" class="icon-btn" title="Search with voice" aria-label="Voice Search">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+        </svg>
+      </button>
+  <p id="status">Status: Idle</p>
+  
+
+  <script>
+    // 1. Audio Dictionary Mapping (Key Phrase -> Audio Source)
+    // Replace these placeholder URLs with paths to your actual MP3/WebM files
+    const audioMap = [
+    { key: "how are you", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans1.opus" },
+    { key: "what's up", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans2.opus" },
+    { key: "nice to meet you", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans3.opus" },
+    { key: "where are you from", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans4.opus" },
+    { key: "how's it going", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans5.opus" },
+    { key: "what do you do", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans6.opus" },
+    { key: "i don't know", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans7.opus" },
+    { key: "that's interesting", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans8.opus" },
+    { key: "i agree", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans9.opus" },
+    { key: "i disagree", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans10.opus" },
+    
+    { key: "excuse me", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans11.opus" },
+    { key: "sorry", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans12.opus" },
+    { key: "please", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans13.opus" },
+    { key: "thank you", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans14.opus" },
+    { key: "you're welcome", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans15.opus" },
+    { key: "can you help me", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans16.opus" },
+    { key: "what's your name", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans17.opus" },
+    { key: "see you later", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans18.opus" },
+    { key: "take care", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans19.opus" },
+    { key: "goodbye", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans20.opus" },
+    
+    { key: "have a great day", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans21.opus" },
+    { key: "i am sorry to hear that", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans22.opus" },
+    { key: "no problem", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans23.opus" },
+    { key: "what's new", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans24.opus" },
+    { key: "how was your day", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans25.opus" },
+    { key: "i'm fine, thank you", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans26.opus" },
+    { key: "it's a pleasure", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans27.opus" },
+    { key: "how's the weather", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans28.opus" },
+    { key: "where do you live", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans29.opus" },
+    { key: "what's your favorite", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans30.opus" },
+    
+    { key: "i don't understand", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans31.opus" },
+    { key: "could you repeat that", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans32.opus" },
+    { key: "never mind", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans33.opus" },
+    { key: "i'm not sure", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans34.opus" },
+    { key: "what time is it", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans35.opus" },
+    { key: "let me think", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans36.opus" },
+    { key: "that's a good idea", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans37.opus" },
+    { key: "i'm not feeling well", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans38.opus" },
+    { key: "what's the matter", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans39.opus" },
+    { key: "it's a long story", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans40.opus" },
+    
+    { key: "what's on your mind", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans41.opus" },
+    { key: "tell me more", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans42.opus" },
+    { key: "i'm really busy", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans43.opus" },
+    { key: "congratulations", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans44.opus" },
+    { key: "i appreciate that", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans45.opus" },
+    { key: "do you like", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans46.opus" },
+    { key: "how about you", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans47.opus" },
+    { key: "it's up to you", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans48.opus" },
+    { key: "i'm just kidding", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans49.opus" },
+    { key: "that's funny", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans50.opus" },
+    
+    { key: "i'm hungry", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans51.opus" },
+    { key: "i'm thirsty", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans52.opus" },
+    { key: "can i have", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans53.opus" },
+    { key: "what's for dinner", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans54.opus" },
+    { key: "it's delicious", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans55.opus" },
+    { key: "i love it", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans56.opus" },
+    { key: "i don't like it", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans57.opus" },
+    { key: "what's the price", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans58.opus" },
+    { key: "where's the bathroom", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans59.opus" },
+    { key: "i need a favor", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans60.opus" },
+    
+    { key: "i'm lost", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans61.opus" },
+    { key: "can you show me", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans62.opus" },
+    { key: "i'm excited", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans63.opus" },
+    { key: "i'm tired", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans64.opus" },
+    { key: "i'm bored", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans65.opus" },
+    { key: "let's hang out", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans66.opus" },
+    { key: "what's your hobby", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans67.opus" },
+    { key: "do you have pets", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans68.opus" },
+    { key: "i miss you", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans69.opus" },
+    { key: "i'm sorry for your loss", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans70.opus" },
+    
+    { key: "what's the latest news", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans71.opus" },
+    { key: "how was your weekend", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans72.opus" },
+    { key: "long time no see", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans73.opus" },
+    { key: "it's a small world", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans74.opus" },
+    { key: "i can't believe it", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans75.opus" },
+    { key: "i'm proud of you", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans76.opus" },
+    { key: "i'm not interested", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans77.opus" },
+    { key: "what's the plan", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans78.opus" },
+    { key: "let's do it", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans79.opus" },
+    { key: "goodluck", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans80.opus" },
+    
+    { key: "take it easy", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans81.opus" },
+    { key: "that's awesome", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans82.opus" },
+    { key: "that's terrible", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans83.opus" },
+    { key: "what a coincidence", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans84.opus" },
+    { key: "i don't care", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans85.opus" },
+    { key: "never give up", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans86.opus" },
+    { key: "i can't wait", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans87.opus" },
+    { key: "let's make a deal", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans88.opus" },
+    { key: "i'm not sure", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans89.opus" },
+    { key: "trust me", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans90.opus" },
+    
+    { key: "i have a question", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans91.opus" },
+    { key: "what's the problem", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans92.opus" },
+    { key: "are you serious", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans93.opus" },
+    { key: "i'm impressed", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans94.opus" },
+    { key: "that's fantastic", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans95.opus" },
+    { key: "how did you do that", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans96.opus" },
+    { key: "you're kidding", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans97.opus" },
+    { key: "i'm not ready", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans98.opus" },
+    { key: "it depends", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans99.opus" },
+    { key: "it's complicated", src: "https://wisdomokubo1.github.io/jikoro/copyright/afrikaans100.opus" },
+    
+    { key: "habari yako", src: "https://wisdomokubo1.github.io/jikoro/copyright/english1.wav" },
+    { key: "vipi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english2.wav" },
+    { key: "nimefurahi kukutana nawe", src: "https://wisdomokubo1.github.io/jikoro/copyright/english3.wav" },
+    { key: "unatoka wapi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english4.wav" },
+    { key: "inakuaje", src: "https://wisdomokubo1.github.io/jikoro/copyright/english5.wav" },
+    { key: "unafanya nini", src: "https://wisdomokubo1.github.io/jikoro/copyright/english6.wav" },
+    { key: "sijui", src: "https://wisdomokubo1.github.io/jikoro/copyright/english7.wav" },
+    { key: "hiyo inavutia", src: "https://wisdomokubo1.github.io/jikoro/copyright/english8.wav" },
+    { key: "nakubali", src: "https://wisdomokubo1.github.io/jikoro/copyright/english9.wav" },
+    { key: "nakataa", src: "https://wisdomokubo1.github.io/jikoro/copyright/english10.wav" },
+    
+    { key: "samahani", src: "https://wisdomokubo1.github.io/jikoro/copyright/english11.wav" },
+    { key: "pole", src: "https://wisdomokubo1.github.io/jikoro/copyright/english12.wav" },
+    { key: "tafadhali", src: "https://wisdomokubo1.github.io/jikoro/copyright/english13.wav" },
+    { key: "asante", src: "https://wisdomokubo1.github.io/jikoro/copyright/english14.wav" },
+    { key: "karibu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english15.wav" },
+    { key: "unaweza kunisaidia", src: "https://wisdomokubo1.github.io/jikoro/copyright/english16.wav" },
+    { key: "jina lako nani", src: "https://wisdomokubo1.github.io/jikoro/copyright/english17.wav" },
+    { key: "tutaonana baadaye", src: "https://wisdomokubo1.github.io/jikoro/copyright/english18.wav" },
+    { key: "kuwa mwangalifu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english19.wav" },
+    { key: "kwaheri", src: "https://wisdomokubo1.github.io/jikoro/copyright/english20.wav" },
+    
+    { key: "uwe na siku njema", src: "https://wisdomokubo1.github.io/jikoro/copyright/english21.wav" },
+    { key: "samahani kusikia hivyo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english22.wav" },
+    { key: "hakuna shida", src: "https://wisdomokubo1.github.io/jikoro/copyright/english23.wav" },
+    { key: "nini mpya", src: "https://wisdomokubo1.github.io/jikoro/copyright/english24.wav" },
+    { key: "umeshindaje", src: "https://wisdomokubo1.github.io/jikoro/copyright/english25.wav" },
+    { key: "sijambo, asante", src: "https://wisdomokubo1.github.io/jikoro/copyright/english26.wav" },
+    { key: "ni furaha", src: "https://wisdomokubo1.github.io/jikoro/copyright/english27.wav" },
+    { key: "hali ya hewa ikoje", src: "https://wisdomokubo1.github.io/jikoro/copyright/english28.wav" },
+    { key: "unaishi wapi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english29.wav" },
+    { key: "ni kipi unachokipenda zaidi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english30.wav" },
+    
+    { key: "sielewi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english31.wav" },
+    { key: "je, unaweza kurudia hivyo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english32.wav" },
+    { key: "usijali", src: "https://wisdomokubo1.github.io/jikoro/copyright/english33.wav" },
+    { key: "sina hakika", src: "https://wisdomokubo1.github.io/jikoro/copyright/english34.wav" },
+    { key: "ni saa ngapi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english35.wav" },
+    { key: "hebu nifikirie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english36.wav" },
+    { key: "hilo ni wazo zur", src: "https://wisdomokubo1.github.io/jikoro/copyright/english37.wav" },
+    { key: "sijisikii vizuri", src: "https://wisdomokubo1.github.io/jikoro/copyright/english38.wav" },
+    { key: "kuna nini", src: "https://wisdomokubo1.github.io/jikoro/copyright/english39.wav" },
+    { key: "ni hadithi ndefu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english40.wav" },
+    
+    { key: "unafikiria nini", src: "https://wisdomokubo1.github.io/jikoro/copyright/english41.wav" },
+    { key: "niambie zaidi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english42.wav" },
+    { key: "nina shughuli nyingi sana", src: "https://wisdomokubo1.github.io/jikoro/copyright/english43.wav" },
+    { key: "hongera", src: "https://wisdomokubo1.github.io/jikoro/copyright/english44.wav" },
+    { key: "ninashukuru hilo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english45.wav" },
+    { key: "unapenda", src: "https://wisdomokubo1.github.io/jikoro/copyright/english46.wav" },
+    { key: "vipi wewe", src: "https://wisdomokubo1.github.io/jikoro/copyright/english47.wav" },
+    { key: "ni juu yako", src: "https://wisdomokubo1.github.io/jikoro/copyright/english48.wav" },
+    { key: "ninatania tu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english49.wav" },
+    { key: "hiyo inachekesha", src: "https://wisdomokubo1.github.io/jikoro/copyright/english50.wav" },
+    
+    { key: "nina njaa", src: "https://wisdomokubo1.github.io/jikoro/copyright/english51.wav" },
+    { key: "nina kiu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english52.wav" },
+    { key: "je, ninaweza", src: "https://wisdomokubo1.github.io/jikoro/copyright/english53.wav" },
+    { key: "nini cha chakula cha jioni", src: "https://wisdomokubo1.github.io/jikoro/copyright/english54.wav" },
+    { key: "ni kitamu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english55.wav" },
+    { key: "ninaipenda", src: "https://wisdomokubo1.github.io/jikoro/copyright/english56.wav" },
+    { key: "siipendi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english57.wav" },
+    { key: "bei gani", src: "https://wisdomokubo1.github.io/jikoro/copyright/english58.wav" },
+    { key: "bafuni iko wapi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english59.wav" },
+    { key: "nahitaji upendeleo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english60.wav" },
+    
+    { key: "nimepotea", src: "https://wisdomokubo1.github.io/jikoro/copyright/english61.wav" },
+    { key: "unaweza kunionyesha", src: "https://wisdomokubo1.github.io/jikoro/copyright/english62.wav" },
+    { key: "nimesisimka", src: "https://wisdomokubo1.github.io/jikoro/copyright/english63.wav" },
+    { key: "nimechoka", src: "https://wisdomokubo1.github.io/jikoro/copyright/english64.wav" },
+    { key: "nimechoka", src: "https://wisdomokubo1.github.io/jikoro/copyright/english65.wav" },
+    { key: "hebu tubarizi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english66.wav" },
+    { key: "hobby yako ni nini", src: "https://wisdomokubo1.github.io/jikoro/copyright/english67.wav" },
+    { key: "je! una kipenzi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english68.wav" },
+    { key: "nimekukosa", src: "https://wisdomokubo1.github.io/jikoro/copyright/english69.wav" },
+    { key: "pole kwa hasara yako", src: "https://wisdomokubo1.github.io/jikoro/copyright/english70.wav" },
+    
+    { key: "ni habari gani za hivi punde", src: "https://wisdomokubo1.github.io/jikoro/copyright/english71.wav" },
+    { key: "wikendi yako ilikuwaje", src: "https://wisdomokubo1.github.io/jikoro/copyright/english72.wav" },
+    { key: "muda mrefu bila kuona", src: "https://wisdomokubo1.github.io/jikoro/copyright/english73.wav" },
+    { key: "ni ulimwengu mdogo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english74.wav" },
+    { key: "siwezi kuamini", src: "https://wisdomokubo1.github.io/jikoro/copyright/english75.wav" },
+    { key: "ninajivunia wewe", src: "https://wisdomokubo1.github.io/jikoro/copyright/english76.wav" },
+    { key: "sipendezwi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english77.wav" },
+    { key: "mpango ni nini", src: "https://wisdomokubo1.github.io/jikoro/copyright/english78.wav" },
+    { key: "hebu tufanye", src: "https://wisdomokubo1.github.io/jikoro/copyright/english79.wav" },
+    { key: "bahati nzuri", src: "https://wisdomokubo1.github.io/jikoro/copyright/english80.wav" },
+    
+    { key: "fanya iwe rahisi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english81.wav" },
+    { key: "hiyo inatisha", src: "https://wisdomokubo1.github.io/jikoro/copyright/english82.wav" },
+    { key: "hiyo ni mbaya", src: "https://wisdomokubo1.github.io/jikoro/copyright/english83.wav" },
+    { key: "ni sadfa iliyoje", src: "https://wisdomokubo1.github.io/jikoro/copyright/english84.wav" },
+    { key: "sijali", src: "https://wisdomokubo1.github.io/jikoro/copyright/english85.wav" },
+    { key: "usikate tamaa", src: "https://wisdomokubo1.github.io/jikoro/copyright/english86.wav" },
+    { key: "siwezi kusubiri", src: "https://wisdomokubo1.github.io/jikoro/copyright/english87.wav" },
+    { key: "hebu tufanye mpango", src: "https://wisdomokubo1.github.io/jikoro/copyright/english88.wav" },
+    { key: "sina hakika", src: "https://wisdomokubo1.github.io/jikoro/copyright/english89.wav" },
+    { key: "niamini", src: "https://wisdomokubo1.github.io/jikoro/copyright/english90.wav" },
+    
+    { key: "nina swali", src: "https://wisdomokubo1.github.io/jikoro/copyright/english91.wav" },
+    { key: "tatizo ni nini", src: "https://wisdomokubo1.github.io/jikoro/copyright/english92.wav" },
+    { key: "je! uko makini", src: "https://wisdomokubo1.github.io/jikoro/copyright/english93.wav" },
+    { key: "nimevutiwa", src: "https://wisdomokubo1.github.io/jikoro/copyright/english94.wav" },
+    { key: "hiyo ni ajabu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english95.wav" },
+    { key: "ulifanyaje hivyo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english96.wav" },
+    { key: "unatania", src: "https://wisdomokubo1.github.io/jikoro/copyright/english97.wav" },
+    { key: "siko tayari", src: "https://wisdomokubo1.github.io/jikoro/copyright/english98.wav" },
+    { key: "inategemea", src: "https://wisdomokubo1.github.io/jikoro/copyright/english99.wav" },
+    { key: "ni ngumu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english100.wav" },
+    
+    
+    { key: "hoe gaan dit met jou", src: "https://wisdomokubo1.github.io/jikoro/copyright/english1.wav" },
+    { key: "wat gaan aan", src: "https://wisdomokubo1.github.io/jikoro/copyright/english2.wav" },
+    { key: "lekker om jou te ontmoet", src: "https://wisdomokubo1.github.io/jikoro/copyright/english3.wav" },
+    { key: "waar kom jy vandaan", src: "https://wisdomokubo1.github.io/jikoro/copyright/english4.wav" },
+    { key: "hoe gaan dit", src: "https://wisdomokubo1.github.io/jikoro/copyright/english5.wav" },
+    { key: "wat doen jy", src: "https://wisdomokubo1.github.io/jikoro/copyright/english6.wav" },
+    { key: "ek weet nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english7.wav" },
+    { key: "dis interessant", src: "https://wisdomokubo1.github.io/jikoro/copyright/english8.wav" },
+    { key: "ek stem saam", src: "https://wisdomokubo1.github.io/jikoro/copyright/english9.wav" },
+    { key: "ek stem nie saam nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english10.wav" },
+    
+    { key: "verskoon my", src: "https://wisdomokubo1.github.io/jikoro/copyright/english11.wav" },
+    { key: "jammer", src: "https://wisdomokubo1.github.io/jikoro/copyright/english12.wav" },
+    { key: "asseblief", src: "https://wisdomokubo1.github.io/jikoro/copyright/english13.wav" },
+    { key: "dankie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english14.wav" },
+    { key: "jy is welkom", src: "https://wisdomokubo1.github.io/jikoro/copyright/english15.wav" },
+    { key: "kan jy my help", src: "https://wisdomokubo1.github.io/jikoro/copyright/english16.wav" },
+    { key: "wat is jou naam", src: "https://wisdomokubo1.github.io/jikoro/copyright/english17.wav" },
+    { key: "sien jou later", src: "https://wisdomokubo1.github.io/jikoro/copyright/english18.wav" },
+    { key: "pas op", src: "https://wisdomokubo1.github.io/jikoro/copyright/english19.wav" },
+    { key: "totsiens", src: "https://wisdomokubo1.github.io/jikoro/copyright/english20.wav" },
+    
+    { key: "lekker dag", src: "https://wisdomokubo1.github.io/jikoro/copyright/english21.wav" },
+    { key: "ek is jammer om dit te hoor", src: "https://wisdomokubo1.github.io/jikoro/copyright/english22.wav" },
+    { key: "geen probleem nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english23.wav" },
+    { key: "wat is nuut", src: "https://wisdomokubo1.github.io/jikoro/copyright/english24.wav" },
+    { key: "hoe was jou dag", src: "https://wisdomokubo1.github.io/jikoro/copyright/english25.wav" },
+    { key: "dit gaan goed met my, dankie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english26.wav" },
+    { key: "dit is 'n plesier", src: "https://wisdomokubo1.github.io/jikoro/copyright/english27.wav" },
+    { key: "hoe is die weer", src: "https://wisdomokubo1.github.io/jikoro/copyright/english28.wav" },
+    { key: "waar woon jy", src: "https://wisdomokubo1.github.io/jikoro/copyright/english29.wav" },
+    { key: "wat is jou gunsteling", src: "https://wisdomokubo1.github.io/jikoro/copyright/english30.wav" },
+    
+    { key: "ek verstaan nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english31.wav" },
+    { key: "kan jy dit herhaal", src: "https://wisdomokubo1.github.io/jikoro/copyright/english32.wav" },
+    { key: "maak nie saak nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english33.wav" },
+    { key: "ek is nie seker nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english34.wav" },
+    { key: "hoe laat is dit", src: "https://wisdomokubo1.github.io/jikoro/copyright/english35.wav" },
+    { key: "laat my dink", src: "https://wisdomokubo1.github.io/jikoro/copyright/english36.wav" },
+    { key: "dit is 'n goeie idee", src: "https://wisdomokubo1.github.io/jikoro/copyright/english37.wav" },
+    { key: "ek voel nie goed nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english38.wav" },
+    { key: "wat is die saak", src: "https://wisdomokubo1.github.io/jikoro/copyright/english39.wav" },
+    { key: "dis 'n lang storie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english40.wav" },
+    
+    { key: "wat dink jy", src: "https://wisdomokubo1.github.io/jikoro/copyright/english41.wav" },
+    { key: "vertel my meer", src: "https://wisdomokubo1.github.io/jikoro/copyright/english42.wav" },
+    { key: "ek is regtig besig", src: "https://wisdomokubo1.github.io/jikoro/copyright/english43.wav" },
+    { key: "baie geluk", src: "https://wisdomokubo1.github.io/jikoro/copyright/english44.wav" },
+    { key: "ek waardeer dit", src: "https://wisdomokubo1.github.io/jikoro/copyright/english45.wav" },
+    { key: "hou jy van", src: "https://wisdomokubo1.github.io/jikoro/copyright/english46.wav" },
+    { key: "hoe gaan dit met jou", src: "https://wisdomokubo1.github.io/jikoro/copyright/english47.wav" },
+    { key: "dit is aan jou", src: "https://wisdomokubo1.github.io/jikoro/copyright/english48.wav" },
+    { key: "ek grap net", src: "https://wisdomokubo1.github.io/jikoro/copyright/english49.wav" },
+    { key: "dis snaaks", src: "https://wisdomokubo1.github.io/jikoro/copyright/english50.wav" },
+    
+    { key: "ek is honger", src: "https://wisdomokubo1.github.io/jikoro/copyright/english51.wav" },
+    { key: "ek is dors", src: "https://wisdomokubo1.github.io/jikoro/copyright/english52.wav" },
+    { key: "kan ek he", src: "https://wisdomokubo1.github.io/jikoro/copyright/english53.wav" },
+    { key: "wat is vir aandete", src: "https://wisdomokubo1.github.io/jikoro/copyright/english54.wav" },
+    { key: "dis heerlik", src: "https://wisdomokubo1.github.io/jikoro/copyright/english55.wav" },
+    { key: "ek is mal daaroor", src: "https://wisdomokubo1.github.io/jikoro/copyright/english56.wav" },
+    { key: "ek hou nie daarvan nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english57.wav" },
+    { key: "wat is die prys", src: "https://wisdomokubo1.github.io/jikoro/copyright/english58.wav" },
+    { key: "waar is die badkamer", src: "https://wisdomokubo1.github.io/jikoro/copyright/english59.wav" },
+    { key: "ek het 'n guns nodig", src: "https://wisdomokubo1.github.io/jikoro/copyright/english60.wav" },
+    
+    { key: "ek is verlore", src: "https://wisdomokubo1.github.io/jikoro/copyright/english61.wav" },
+    { key: "kan jy my wys", src: "https://wisdomokubo1.github.io/jikoro/copyright/english62.wav" },
+    { key: "ek is opgewonde", src: "https://wisdomokubo1.github.io/jikoro/copyright/english63.wav" },
+    { key: "ek is moeg", src: "https://wisdomokubo1.github.io/jikoro/copyright/english64.wav" },
+    { key: "ek is verveeld", src: "https://wisdomokubo1.github.io/jikoro/copyright/english65.wav" },
+    { key: "kom ons kuier", src: "https://wisdomokubo1.github.io/jikoro/copyright/english66.wav" },
+    { key: "wat is jou stokperdjie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english67.wav" },
+    { key: "het jy troeteldiere", src: "https://wisdomokubo1.github.io/jikoro/copyright/english68.wav" },
+    { key: "ek mis jou", src: "https://wisdomokubo1.github.io/jikoro/copyright/english69.wav" },
+    { key: "ek is jammer vir jou verlies", src: "https://wisdomokubo1.github.io/jikoro/copyright/english70.wav" },
+    
+    { key: "wat is die jongste nuus", src: "https://wisdomokubo1.github.io/jikoro/copyright/english71.wav" },
+    { key: "hoe was jou naweek", src: "https://wisdomokubo1.github.io/jikoro/copyright/english72.wav" },
+    { key: "lank nie gesien nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english73.wav" },
+    { key: "dit is 'n klein wereld", src: "https://wisdomokubo1.github.io/jikoro/copyright/english74.wav" },
+    { key: "ek kan dit nie glo nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english75.wav" },
+    { key: "ek is trots op jou", src: "https://wisdomokubo1.github.io/jikoro/copyright/english76.wav" },
+    { key: "ek stel nie belang nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english77.wav" },
+    { key: "wat is die plan", src: "https://wisdomokubo1.github.io/jikoro/copyright/english78.wav" },
+    { key: "kom ons doen dit", src: "https://wisdomokubo1.github.io/jikoro/copyright/english79.wav" },
+    { key: "sterkte", src: "https://wisdomokubo1.github.io/jikoro/copyright/english80.wav" },
+    
+    { key: "neem dit rustig", src: "https://wisdomokubo1.github.io/jikoro/copyright/english81.wav" },
+    { key: "dis wonderlik", src: "https://wisdomokubo1.github.io/jikoro/copyright/english82.wav" },
+    { key: "dis verskriklik", src: "https://wisdomokubo1.github.io/jikoro/copyright/english83.wav" },
+    { key: "wat 'n toeval", src: "https://wisdomokubo1.github.io/jikoro/copyright/english84.wav" },
+    { key: "ek gee nie om nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english85.wav" },
+    { key: "moet nooit moed opgee nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english86.wav" },
+    { key: "ek kan nie wag nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english87.wav" },
+    { key: "kom ons maak 'n ooreenkoms", src: "https://wisdomokubo1.github.io/jikoro/copyright/english88.wav" },
+    { key: "ek is nie seker nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english89.wav" },
+    { key: "vertrou my", src: "https://wisdomokubo1.github.io/jikoro/copyright/english90.wav" },
+    
+    { key: "ek het 'n vraag", src: "https://wisdomokubo1.github.io/jikoro/copyright/english91.wav" },
+    { key: "wat is die probleem", src: "https://wisdomokubo1.github.io/jikoro/copyright/english92.wav" },
+    { key: "is jy ernstig", src: "https://wisdomokubo1.github.io/jikoro/copyright/english93.wav" },
+    { key: "ek is beindruk", src: "https://wisdomokubo1.github.io/jikoro/copyright/english94.wav" },
+    { key: "dis fantasties", src: "https://wisdomokubo1.github.io/jikoro/copyright/english95.wav" },
+    { key: "hoe het jy dit gedoen", src: "https://wisdomokubo1.github.io/jikoro/copyright/english96.wav" },
+    { key: "jy maak 'n grap", src: "https://wisdomokubo1.github.io/jikoro/copyright/english97.wav" },
+    { key: "ek is nie gereed nie", src: "https://wisdomokubo1.github.io/jikoro/copyright/english98.wav" },
+    { key: "dit hang af", src: "https://wisdomokubo1.github.io/jikoro/copyright/english99.wav" },
+    { key: "dit is ingewikkeld", src: "https://wisdomokubo1.github.io/jikoro/copyright/english100.wav" },
+    ];
+
+    const statusEl = document.getElementById('status');
+    const textInput = document.getElementById('textInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+
+    // Currently playing audio instance to prevent overlapping audio
+    let currentAudio = null;
+
+    // 2. Playback Handler (with Fuzzy Matching & Autoplay Safety)
+    function processInput(rawText) {
+      const cleanInput = rawText.toLowerCase().trim();
+      statusEl.textContent = `User said: "${rawText}"`;
+
+      // Find matching entry (fuzzy search: checks if user input contains any key phrase)
+      const match = audioMap.find(item => cleanInput.includes(item.key));
+
+      if (match) {
+        // Stop currently playing audio if applicable
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+        }
+
+        statusEl.textContent = `Matching and Playing audio...`;
+
+        // Create and play audio object
+        currentAudio = new Audio(match.src);
+        currentAudio.play().catch(error => {
+          console.error("Audio playback error:", error);
+          statusEl.textContent = "Error: Click anywhere on the page first to allow audio playback.";
+        });
+      } else {
+        statusEl.textContent = `No audio match found for "${rawText}".`;
+      }
+    }
+
+    // 3. Text Input Handler
+    sendBtn.addEventListener('click', () => {
+      if (textInput.value) {
+        processInput(textInput.value);
+        textInput.value = '';
+      }
+    });
+
+    textInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && textInput.value) {
+        processInput(textInput.value);
+        textInput.value = '';
+      }
+    });
+
+    // 4. Web Speech API Setup for Real-Time Microphone Listening
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = 'en-US';
+
+      micBtn.addEventListener('click', () => {
+        statusEl.textContent = "Listening...";
+        recognition.start();
+      });
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        processInput(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        statusEl.textContent = `Speech error: ${event.error}`;
+      };
+
+      recognition.onend = () => {
+        if (statusEl.textContent === "Listening...") {
+          statusEl.textContent = "Idle";
+        }
+      };
+    } else {
+      micBtn.disabled = true;
+      micBtn.textContent = "🎤 Voice Recognition Not Supported";
+      statusEl.textContent = "Web Speech API is not supported in this browser. Use text input above.";
+    }
+  </script>
+
+</body>
+</html>
