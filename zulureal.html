@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sophia AI Languages Tutor</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #status {
+      font-size: 14px;
+      color: #555;
+      margin-top: 10px;
+    }
+  </style>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-180524052-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'UA-180524052-1');
+  </script>
+</head>
+<body>
+
+ <h1>Explore Africa</h1>
+  <h2>Zulu Translator</h2>
+  
+  <!-- Text Input Fallback / Alternative -->
+  <div class="input-group">
+    <input type="text" id="textInput" placeholder="Type words or tap the mic...
+    " />
+    <button id="sendBtn">Send</button>
+  </div>
+
+  <!-- Speech Input -->
+      <button id="micBtn" class="icon-btn" title="Search with voice" aria-label="Voice Search">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+        </svg>
+      </button>
+  <p id="status">Status: Idle</p>
+  
+
+  <script>
+    // 1. Audio Dictionary Mapping (Key Phrase -> Audio Source)
+    // Replace these placeholder URLs with paths to your actual MP3/WebM files
+    const audioMap = [
+    { key: "how are you", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu1.opus" },
+    { key: "what's up", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu2.opus" },
+    { key: "nice to meet you", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu3.opus" },
+    { key: "where are you from", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu4.opus" },
+    { key: "how's it going", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu5.opus" },
+    { key: "what do you do", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu6.opus" },
+    { key: "i don't know", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu7.opus" },
+    { key: "that's interesting", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu8.opus" },
+    { key: "i agree", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu9.opus" },
+    { key: "i disagree", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu10.opus" },
+    
+    { key: "excuse me", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu11.opus" },
+    { key: "sorry", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu12.opus" },
+    { key: "please", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu13.opus" },
+    { key: "thank you", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu14.opus" },
+    { key: "you're welcome", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu15.opus" },
+    { key: "can you help me", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu16.opus" },
+    { key: "what's your name", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu17.opus" },
+    { key: "see you later", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu18.opus" },
+    { key: "take care", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu19.opus" },
+    { key: "goodbye", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu20.opus" },
+    
+    { key: "have a great day", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu21.opus" },
+    { key: "i am sorry to hear that", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu22.opus" },
+    { key: "no problem", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu23.opus" },
+    { key: "what's new", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu24.opus" },
+    { key: "how was your day", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu25.opus" },
+    { key: "i'm fine, thank you", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu26.opus" },
+    { key: "it's a pleasure", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu27.opus" },
+    { key: "how's the weather", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu28.opus" },
+    { key: "where do you live", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu29.opus" },
+    { key: "what's your favorite", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu30.opus" },
+    
+    { key: "i don't understand", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu31.opus" },
+    { key: "could you repeat that", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu32.opus" },
+    { key: "never mind", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu33.opus" },
+    { key: "i'm not sure", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu34.opus" },
+    { key: "what time is it", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu35.opus" },
+    { key: "let me think", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu36.opus" },
+    { key: "that's a good idea", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu37.opus" },
+    { key: "i'm not feeling well", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu38.opus" },
+    { key: "what's the matter", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu39.opus" },
+    { key: "it's a long story", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu40.opus" },
+    
+    { key: "what's on your mind", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu41.opus" },
+    { key: "tell me more", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu42.opus" },
+    { key: "i'm really busy", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu43.opus" },
+    { key: "congratulations", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu44.opus" },
+    { key: "i appreciate that", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu45.opus" },
+    { key: "do you like", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu46.opus" },
+    { key: "how about you", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu47.opus" },
+    { key: "it's up to you", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu48.opus" },
+    { key: "i'm just kidding", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu49.opus" },
+    { key: "that's funny", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu50.opus" },
+    
+    { key: "i'm hungry", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu51.opus" },
+    { key: "i'm thirsty", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu52.opus" },
+    { key: "can i have", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu53.opus" },
+    { key: "what's for dinner", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu54.opus" },
+    { key: "it's delicious", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu55.opus" },
+    { key: "i love it", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu56.opus" },
+    { key: "i don't like it", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu57.opus" },
+    { key: "what's the price", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu58.opus" },
+    { key: "where's the bathroom", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu59.opus" },
+    { key: "i need a favor", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu60.opus" },
+    
+    { key: "i'm lost", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu61.opus" },
+    { key: "can you show me", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu62.opus" },
+    { key: "i'm excited", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu63.opus" },
+    { key: "i'm tired", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu64.opus" },
+    { key: "i'm bored", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu65.opus" },
+    { key: "let's hang out", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu66.opus" },
+    { key: "what's your hobby", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu67.opus" },
+    { key: "do you have pets", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu68.opus" },
+    { key: "i miss you", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu69.opus" },
+    { key: "i'm sorry for your loss", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu70.opus" },
+    
+    { key: "what's the latest news", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu71.opus" },
+    { key: "how was your weekend", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu72.opus" },
+    { key: "long time no see", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu73.opus" },
+    { key: "it's a small world", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu74.opus" },
+    { key: "i can't believe it", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu75.opus" },
+    { key: "i'm proud of you", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu76.opus" },
+    { key: "i'm not interested", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu77.opus" },
+    { key: "what's the plan", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu78.opus" },
+    { key: "let's do it", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu79.opus" },
+    { key: "goodluck", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu80.opus" },
+    
+    { key: "take it easy", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu81.opus" },
+    { key: "that's awesome", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu82.opus" },
+    { key: "that's terrible", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu83.opus" },
+    { key: "what a coincidence", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu84.opus" },
+    { key: "i don't care", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu85.opus" },
+    { key: "never give up", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu86.opus" },
+    { key: "i can't wait", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu87.opus" },
+    { key: "let's make a deal", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu88.opus" },
+    { key: "i'm not sure", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu89.opus" },
+    { key: "trust me", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu90.opus" },
+    
+    { key: "i have a question", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu91.opus" },
+    { key: "what's the problem", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu92.opus" },
+    { key: "are you serious", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu93.opus" },
+    { key: "i'm impressed", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu94.opus" },
+    { key: "that's fantastic", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu95.opus" },
+    { key: "how did you do that", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu96.opus" },
+    { key: "you're kidding", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu97.opus" },
+    { key: "i'm not ready", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu98.opus" },
+    { key: "it depends", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu99.opus" },
+    { key: "it's complicated", src: "https://wisdomokubo1.github.io/jikoro/copyright/zulu100.opus" },
+    
+    
+    { key: "bawo ni o se wa", src: "https://wisdomokubo1.github.io/jikoro/copyright/english1.wav" },
+    { key: "kilode", src: "https://wisdomokubo1.github.io/jikoro/copyright/english2.wav" },
+    { key: "inu mi dun lati pade yin", src: "https://wisdomokubo1.github.io/jikoro/copyright/english3.wav" },
+    { key: "nibo ni o ti wa", src: "https://wisdomokubo1.github.io/jikoro/copyright/english4.wav" },
+    { key: "bawo lo se n lo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english5.wav" },
+    { key: "kini o nse", src: "https://wisdomokubo1.github.io/jikoro/copyright/english6.wav" },
+    { key: "emi ko mo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english7.wav" },
+    { key: "ti o ni awon", src: "https://wisdomokubo1.github.io/jikoro/copyright/english8.wav" },
+    { key: "mo gba", src: "https://wisdomokubo1.github.io/jikoro/copyright/english9.wav" },
+    { key: "mi o gba", src: "https://wisdomokubo1.github.io/jikoro/copyright/english10.wav" },
+    
+    { key: "mo toro gafara", src: "https://wisdomokubo1.github.io/jikoro/copyright/english11.wav" },
+    { key: "ma binu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english12.wav" },
+    { key: "jowo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english13.wav" },
+    { key: "e dupe", src: "https://wisdomokubo1.github.io/jikoro/copyright/english14.wav" },
+    { key: "a ki dupe ara eni", src: "https://wisdomokubo1.github.io/jikoro/copyright/english15.wav" },
+    { key: "se o le ran me lowo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english16.wav" },
+    { key: "kini oruko re", src: "https://wisdomokubo1.github.io/jikoro/copyright/english17.wav" },
+    { key: "ma a ri e laipe", src: "https://wisdomokubo1.github.io/jikoro/copyright/english18.wav" },
+    { key: "o dabo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english19.wav" },
+    { key: "O dabo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english20.wav" },
+    
+    { key: "ojo re oni a dara gan ni", src: "https://wisdomokubo1.github.io/jikoro/copyright/english21.wav" },
+    { key: "ma binu lati gbo iyen", src: "https://wisdomokubo1.github.io/jikoro/copyright/english22.wav" },
+    { key: "kosi wahala", src: "https://wisdomokubo1.github.io/jikoro/copyright/english23.wav" },
+    { key: "kini tuntun", src: "https://wisdomokubo1.github.io/jikoro/copyright/english24.wav" },
+    { key: "bawo ni ojo re", src: "https://wisdomokubo1.github.io/jikoro/copyright/english25.wav" },
+    { key: "o dara o seun", src: "https://wisdomokubo1.github.io/jikoro/copyright/english26.wav" },
+    { key: "pelu idunnu ni", src: "https://wisdomokubo1.github.io/jikoro/copyright/english27.wav" },
+    { key: "bawo ni oju ojo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english28.wav" },
+    { key: "nibo ni o ngbe", src: "https://wisdomokubo1.github.io/jikoro/copyright/english29.wav" },
+    { key: "kini ayanfe re", src: "https://wisdomokubo1.github.io/jikoro/copyright/english30.wav" },
+    
+    { key: "ko ye mi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english31.wav" },
+    { key: "se o le tun iyen se", src: "https://wisdomokubo1.github.io/jikoro/copyright/english32.wav" },
+    { key: "mase yo nu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english33.wav" },
+    { key: "ko da mi loju", src: "https://wisdomokubo1.github.io/jikoro/copyright/english34.wav" },
+    { key: "ogogo melo ni o lu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english35.wav" },
+    { key: "je kin ronu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english36.wav" },
+    { key: "iyen je imoran to dara", src: "https://wisdomokubo1.github.io/jikoro/copyright/english37.wav" },
+    { key: "ara mi ko dara", src: "https://wisdomokubo1.github.io/jikoro/copyright/english38.wav" },
+    { key: "kin o nsele", src: "https://wisdomokubo1.github.io/jikoro/copyright/english39.wav" },
+    { key: "itan gigun ni", src: "https://wisdomokubo1.github.io/jikoro/copyright/english40.wav" },
+    
+    { key: "ki o wa lokan re", src: "https://wisdomokubo1.github.io/jikoro/copyright/english41.wav" },
+    { key: "so fun mi siwaju sii", src: "https://wisdomokubo1.github.io/jikoro/copyright/english42.wav" },
+    { key: "mo n lowo looto", src: "https://wisdomokubo1.github.io/jikoro/copyright/english43.wav" },
+    { key: "oriire", src: "https://wisdomokubo1.github.io/jikoro/copyright/english44.wav" },
+    { key: "mo moriri iyen", src: "https://wisdomokubo1.github.io/jikoro/copyright/english45.wav" },
+    { key: "se o feran", src: "https://wisdomokubo1.github.io/jikoro/copyright/english46.wav" },
+    { key: "iwo na nko", src: "https://wisdomokubo1.github.io/jikoro/copyright/english47.wav" },
+    { key: "o ku si e lowo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english48.wav" },
+    { key: "mo kan nse eremode ni", src: "https://wisdomokubo1.github.io/jikoro/copyright/english49.wav" },
+    { key: "iyen pa ni lerin", src: "https://wisdomokubo1.github.io/jikoro/copyright/english50.wav" },
+    
+    { key: "ebi n pa mi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english51.wav" },
+    { key: "oungbe n gbe mi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english52.wav" },
+    { key: "se mo le ni", src: "https://wisdomokubo1.github.io/jikoro/copyright/english53.wav" },
+    { key: "kini fun ale", src: "https://wisdomokubo1.github.io/jikoro/copyright/english54.wav" },
+    { key: "o dun", src: "https://wisdomokubo1.github.io/jikoro/copyright/english55.wav" },
+    { key: "mo ni ife re", src: "https://wisdomokubo1.github.io/jikoro/copyright/english56.wav" },
+    { key: "nko feran re", src: "https://wisdomokubo1.github.io/jikoro/copyright/english57.wav" },
+    { key: "kini idiyele naa", src: "https://wisdomokubo1.github.io/jikoro/copyright/english58.wav" },
+    { key: "nibo ni baluwe", src: "https://wisdomokubo1.github.io/jikoro/copyright/english59.wav" },
+    { key: "mo nilo ojurere", src: "https://wisdomokubo1.github.io/jikoro/copyright/english60.wav" },
+    
+    { key: "mo sonu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english61.wav" },
+    { key: "se o le fihan mi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english62.wav" },
+    { key: "mo dunnu", src: "https://wisdomokubo1.github.io/jikoro/copyright/english63.wav" },
+    { key: "o re mi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english64.wav" },
+    { key: "o sun mi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english65.wav" },
+    { key: "je ka idorikodo jade", src: "https://wisdomokubo1.github.io/jikoro/copyright/english66.wav" },
+    { key: "kini ise asenoju re", src: "https://wisdomokubo1.github.io/jikoro/copyright/english67.wav" },
+    { key: "se o ni ohun osin", src: "https://wisdomokubo1.github.io/jikoro/copyright/english68.wav" },
+    { key: "aro re so mi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english69.wav" },
+    { key: "ma binu fun isonu re", src: "https://wisdomokubo1.github.io/jikoro/copyright/english70.wav" },
+    
+    { key: "kini iroyin tuntun", src: "https://wisdomokubo1.github.io/jikoro/copyright/english71.wav" },
+    { key: "bawo ni ipari ose rẹ", src: "https://wisdomokubo1.github.io/jikoro/copyright/english72.wav" },
+    { key: "o tojo meta", src: "https://wisdomokubo1.github.io/jikoro/copyright/english73.wav" },
+    { key: "aye kekere ni", src: "https://wisdomokubo1.github.io/jikoro/copyright/english74.wav" },
+    { key: "emi ko le gbagbo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english75.wav" },
+    { key: "mo gberaga fun o", src: "https://wisdomokubo1.github.io/jikoro/copyright/english76.wav" },
+    { key: "nko ni iferan si", src: "https://wisdomokubo1.github.io/jikoro/copyright/english77.wav" },
+    { key: "ki ni eto", src: "https://wisdomokubo1.github.io/jikoro/copyright/english78.wav" },
+    { key: "je ka se o", src: "https://wisdomokubo1.github.io/jikoro/copyright/english79.wav" },
+    { key: "orire daada", src: "https://wisdomokubo1.github.io/jikoro/copyright/english80.wav" },
+    
+    { key: "rora se", src: "https://wisdomokubo1.github.io/jikoro/copyright/english81.wav" },
+    { key: "iyen je oniyi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english82.wav" },
+    { key: "iyen je eru", src: "https://wisdomokubo1.github.io/jikoro/copyright/english83.wav" },
+    { key: "e o ri i pe o sadede sele", src: "https://wisdomokubo1.github.io/jikoro/copyright/english84.wav" },
+    { key: "emi ko bikita", src: "https://wisdomokubo1.github.io/jikoro/copyright/english85.wav" },
+    { key: "mase gba rara", src: "https://wisdomokubo1.github.io/jikoro/copyright/english86.wav" },
+    { key: "nko le duro", src: "https://wisdomokubo1.github.io/jikoro/copyright/english87.wav" },
+    { key: "je ki a se adehun kan", src: "https://wisdomokubo1.github.io/jikoro/copyright/english88.wav" },
+    { key: "ko da mi loju", src: "https://wisdomokubo1.github.io/jikoro/copyright/english89.wav" },
+    { key: "gbekele mi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english90.wav" },
+    
+    { key: "mo ni ibere kan", src: "https://wisdomokubo1.github.io/jikoro/copyright/english91.wav" },
+    { key: "kini isoro naa", src: "https://wisdomokubo1.github.io/jikoro/copyright/english92.wav" },
+    { key: "se tooto ni o so", src: "https://wisdomokubo1.github.io/jikoro/copyright/english93.wav" },
+    { key: "mo wu mi lorí", src: "https://wisdomokubo1.github.io/jikoro/copyright/english94.wav" },
+    { key: "iyen je ikoja", src: "https://wisdomokubo1.github.io/jikoro/copyright/english95.wav" },
+    { key: "bawo ni o se se be", src: "https://wisdomokubo1.github.io/jikoro/copyright/english96.wav" },
+    { key: "o nsere", src: "https://wisdomokubo1.github.io/jikoro/copyright/english97.wav" },
+    { key: "nko setan", src: "https://wisdomokubo1.github.io/jikoro/copyright/english98.wav" },
+    { key: "o gbarale", src: "https://wisdomokubo1.github.io/jikoro/copyright/english99.wav" },
+    { key: "eleyi diju", src: "https://wisdomokubo1.github.io/jikoro/copyright/english100.wav" },
+    ];
+
+    const statusEl = document.getElementById('status');
+    const textInput = document.getElementById('textInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+
+    // Currently playing audio instance to prevent overlapping audio
+    let currentAudio = null;
+
+    // 2. Playback Handler (with Fuzzy Matching & Autoplay Safety)
+    function processInput(rawText) {
+      const cleanInput = rawText.toLowerCase().trim();
+      statusEl.textContent = `User said: "${rawText}"`;
+
+      // Find matching entry (fuzzy search: checks if user input contains any key phrase)
+      const match = audioMap.find(item => cleanInput.includes(item.key));
+
+      if (match) {
+        // Stop currently playing audio if applicable
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+        }
+
+        statusEl.textContent = `Matching and Playing audio...`;
+
+        // Create and play audio object
+        currentAudio = new Audio(match.src);
+        currentAudio.play().catch(error => {
+          console.error("Audio playback error:", error);
+          statusEl.textContent = "Error: Click anywhere on the page first to allow audio playback.";
+        });
+      } else {
+        statusEl.textContent = `No audio match found for "${rawText}".`;
+      }
+    }
+
+    // 3. Text Input Handler
+    sendBtn.addEventListener('click', () => {
+      if (textInput.value) {
+        processInput(textInput.value);
+        textInput.value = '';
+      }
+    });
+
+    textInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && textInput.value) {
+        processInput(textInput.value);
+        textInput.value = '';
+      }
+    });
+
+    // 4. Web Speech API Setup for Real-Time Microphone Listening
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = 'en-US';
+
+      micBtn.addEventListener('click', () => {
+        statusEl.textContent = "Listening...";
+        recognition.start();
+      });
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        processInput(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        statusEl.textContent = `Speech error: ${event.error}`;
+      };
+
+      recognition.onend = () => {
+        if (statusEl.textContent === "Listening...") {
+          statusEl.textContent = "Idle";
+        }
+      };
+    } else {
+      micBtn.disabled = true;
+      micBtn.textContent = "🎤 Voice Recognition Not Supported";
+      statusEl.textContent = "Web Speech API is not supported in this browser. Use text input above.";
+    }
+  </script>
+
+</body>
+</html>
