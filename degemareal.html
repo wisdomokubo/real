@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voice & Text Audio Responder</title>
+  <title>Sophia AI Languages Tutor</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
@@ -34,6 +34,15 @@
       margin-top: 10px;
     }
   </style>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-180524052-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'UA-180524052-1');
+  </script>
 </head>
 <body>
 
@@ -60,21 +69,226 @@
     // 1. Audio Dictionary Mapping (Key Phrase -> Audio Source)
     // Replace these placeholder URLs with paths to your actual MP3/WebM files
     const audioMap = [
+    { key: "how are you", src: "https://wisdomokubo.github.io/real/copyright/degema1.aac" },
+    { key: "what's up", src: "https://wisdomokubo.github.io/real/copyright/degema2.aac" },
+    { key: "nice to meet you", src: "https://wisdomokubo.github.io/real/copyright/degema3.aac" },
+    { key: "where are you from", src: "https://wisdomokubo.github.io/real/copyright/degema4.aac" },
+    { key: "how's it going", src: "https://wisdomokubo.github.io/real/copyright/degema5.aac" },
+    { key: "what do you do", src: "https://wisdomokubo.github.io/real/copyright/degema6.aac" },
+    { key: "i don't know", src: "https://wisdomokubo.github.io/real/copyright/degema7.aac" },
+    { key: "that's interesting", src: "https://wisdomokubo.github.io/real/copyright/degema8.aac" },
+    { key: "i agree", src: "https://wisdomokubo.github.io/real/copyright/degema9.aac" },
+    { key: "i disagree", src: "https://wisdomokubo.github.io/real/copyright/degema10.aac" },
+    
+    { key: "excuse me", src: "https://wisdomokubo.github.io/real/copyright/degema11.aac" },
+    { key: "sorry", src: "https://wisdomokubo.github.io/real/copyright/degema12.aac" },
+    { key: "please", src: "https://wisdomokubo.github.io/real/copyright/degema13.aac" },
+    { key: "thank you", src: "https://wisdomokubo.github.io/real/copyright/degema14.aac" },
+    { key: "you're welcome", src: "https://wisdomokubo.github.io/real/copyright/degema15.aac" },
+    { key: "can you help me", src: "https://wisdomokubo.github.io/real/copyright/degema16.aac" },
+    { key: "what's your name", src: "https://wisdomokubo.github.io/real/copyright/degema17.aac" },
+    { key: "see you later", src: "https://wisdomokubo.github.io/real/copyright/degema18.aac" },
+    { key: "take care", src: "https://wisdomokubo.github.io/real/copyright/degema19.aac" },
+    { key: "goodbye", src: "https://wisdomokubo.github.io/real/copyright/degema20.aac" },
+    
+    { key: "have a great day", src: "https://wisdomokubo.github.io/real/copyright/degema21.aac" },
+    { key: "i am sorry to hear that", src: "https://wisdomokubo.github.io/real/copyright/degema22.aac" },
+    { key: "no problem", src: "https://wisdomokubo.github.io/real/copyright/degema23.aac" },
+    { key: "what's new", src: "https://wisdomokubo.github.io/real/copyright/degema24.aac" },
+    { key: "how was your day", src: "https://wisdomokubo.github.io/real/copyright/degema25.aac" },
+    { key: "i'm fine, thank you", src: "https://wisdomokubo.github.io/real/copyright/degema26.aac" },
+    { key: "it's a pleasure", src: "https://wisdomokubo.github.io/real/copyright/degema27.aac" },
+    { key: "how's the weather", src: "https://wisdomokubo.github.io/real/copyright/degema28.aac" },
+    { key: "where do you live", src: "https://wisdomokubo.github.io/real/copyright/degema29.aac" },
+    { key: "what's your favorite", src: "https://wisdomokubo.github.io/real/copyright/degema30.aac" },
+    
+    { key: "i don't understand", src: "https://wisdomokubo.github.io/real/copyright/degema31.aac" },
+    { key: "could you repeat that", src: "https://wisdomokubo.github.io/real/copyright/degema32.aac" },
+    { key: "never mind", src: "https://wisdomokubo.github.io/real/copyright/degema33.aac" },
+    { key: "i'm not sure", src: "https://wisdomokubo.github.io/real/copyright/degema34.aac" },
+    { key: "what time is it", src: "https://wisdomokubo.github.io/real/copyright/degema35.aac" },
+    { key: "let me think", src: "https://wisdomokubo.github.io/real/copyright/degema36.aac" },
+    { key: "that's a good idea", src: "https://wisdomokubo.github.io/real/copyright/degema37.aac" },
+    { key: "i'm not feeling well", src: "https://wisdomokubo.github.io/real/copyright/degema38.aac" },
+    { key: "what's the matter", src: "https://wisdomokubo.github.io/real/copyright/degema39.aac" },
+    { key: "it's a long story", src: "https://wisdomokubo.github.io/real/copyright/degema40.aac" },
+    
+    { key: "what's on your mind", src: "https://wisdomokubo.github.io/real/copyright/degema41.aac" },
+    { key: "tell me more", src: "https://wisdomokubo.github.io/real/copyright/degema42.aac" },
+    { key: "i'm really busy", src: "https://wisdomokubo.github.io/real/copyright/degema43.aac" },
+    { key: "congratulations", src: "https://wisdomokubo.github.io/real/copyright/degema44.aac" },
+    { key: "i appreciate that", src: "https://wisdomokubo.github.io/real/copyright/degema45.aac" },
+    { key: "do you like", src: "https://wisdomokubo.github.io/real/copyright/degema46.aac" },
+    { key: "how about you", src: "https://wisdomokubo.github.io/real/copyright/degema47.aac" },
+    { key: "it's up to you", src: "https://wisdomokubo.github.io/real/copyright/degema48.aac" },
+    { key: "i'm just kidding", src: "https://wisdomokubo.github.io/real/copyright/degema49.aac" },
+    { key: "that's funny", src: "https://wisdomokubo.github.io/real/copyright/degema50.aac" },
+    
+    { key: "i'm hungry", src: "https://wisdomokubo.github.io/real/copyright/degema51.aac" },
+    { key: "i'm thirsty", src: "https://wisdomokubo.github.io/real/copyright/degema52.aac" },
+    { key: "can i have", src: "https://wisdomokubo.github.io/real/copyright/degema53.aac" },
+    { key: "what's for dinner", src: "https://wisdomokubo.github.io/real/copyright/degema54.aac" },
+    { key: "it's delicious", src: "https://wisdomokubo.github.io/real/copyright/degema55.aac" },
+    { key: "i love it", src: "https://wisdomokubo.github.io/real/copyright/degema56.aac" },
+    { key: "i don't like it", src: "https://wisdomokubo.github.io/real/copyright/degema57.aac" },
+    { key: "what's the price", src: "https://wisdomokubo.github.io/real/copyright/degema58.aac" },
+    { key: "where's the bathroom", src: "https://wisdomokubo.github.io/real/copyright/degema59.aac" },
+    { key: "i need a favor", src: "https://wisdomokubo.github.io/real/copyright/degema60.aac" },
+    
+    { key: "i'm lost", src: "https://wisdomokubo.github.io/real/copyright/degema61.aac" },
+    { key: "can you show me", src: "https://wisdomokubo.github.io/real/copyright/degema62.aac" },
+    { key: "i'm excited", src: "https://wisdomokubo.github.io/real/copyright/degema63.aac" },
+    { key: "i'm tired", src: "https://wisdomokubo.github.io/real/copyright/degema64.aac" },
+    { key: "i'm bored", src: "https://wisdomokubo.github.io/real/copyright/degema65.aac" },
+    { key: "let's hang out", src: "https://wisdomokubo.github.io/real/copyright/degema66.aac" },
+    { key: "what's your hobby", src: "https://wisdomokubo.github.io/real/copyright/degema67.aac" },
+    { key: "do you have pets", src: "https://wisdomokubo.github.io/real/copyright/degema68.aac" },
+    { key: "i miss you", src: "https://wisdomokubo.github.io/real/copyright/degema69.aac" },
+    { key: "i'm sorry for your loss", src: "https://wisdomokubo.github.io/real/copyright/degema70.aac" },
+    
+    { key: "what's the latest news", src: "https://wisdomokubo.github.io/real/copyright/degema71.aac" },
+    { key: "how was your weekend", src: "https://wisdomokubo.github.io/real/copyright/degema72.aac" },
+    { key: "long time no see", src: "https://wisdomokubo.github.io/real/copyright/degema73.aac" },
+    { key: "it's a small world", src: "https://wisdomokubo.github.io/real/copyright/degema74.aac" },
+    { key: "i can't believe it", src: "https://wisdomokubo.github.io/real/copyright/degema75.aac" },
+    { key: "i'm proud of you", src: "https://wisdomokubo.github.io/real/copyright/degema76.aac" },
+    { key: "i'm not interested", src: "https://wisdomokubo.github.io/real/copyright/degema77.aac" },
+    { key: "what's the plan", src: "https://wisdomokubo.github.io/real/copyright/degema78.aac" },
+    { key: "let's do it", src: "https://wisdomokubo.github.io/real/copyright/degema79.aac" },
+    { key: "goodluck", src: "https://wisdomokubo.github.io/real/copyright/degema80.aac" },
+    
+    { key: "take it easy", src: "https://wisdomokubo.github.io/real/copyright/degema81.aac" },
+    { key: "that's awesome", src: "https://wisdomokubo.github.io/real/copyright/degema82.aac" },
+    { key: "that's terrible", src: "https://wisdomokubo.github.io/real/copyright/degema83.aac" },
+    { key: "what a coincidence", src: "https://wisdomokubo.github.io/real/copyright/degema84.aac" },
+    { key: "i don't care", src: "https://wisdomokubo.github.io/real/copyright/degema85.aac" },
+    { key: "never give up", src: "https://wisdomokubo.github.io/real/copyright/degema86.aac" },
+    { key: "i can't wait", src: "https://wisdomokubo.github.io/real/copyright/degema87.aac" },
+    { key: "let's make a deal", src: "https://wisdomokubo.github.io/real/copyright/degema88.aac" },
+    { key: "i'm not sure", src: "https://wisdomokubo.github.io/real/copyright/degema89.aac" },
+    { key: "trust me", src: "https://wisdomokubo.github.io/real/copyright/degema90.aac" },
+    
+    { key: "i have a question", src: "https://wisdomokubo.github.io/real/copyright/degema91.aac" },
+    { key: "what's the problem", src: "https://wisdomokubo.github.io/real/copyright/degema92.aac" },
+    { key: "are you serious", src: "https://wisdomokubo.github.io/real/copyright/degema93.aac" },
+    { key: "i'm impressed", src: "https://wisdomokubo.github.io/real/copyright/degema94.aac" },
+    { key: "that's fantastic", src: "https://wisdomokubo.github.io/real/copyright/degema95.aac" },
+    { key: "how did you do that", src: "https://wisdomokubo.github.io/real/copyright/degema96.aac" },
+    { key: "you're kidding", src: "https://wisdomokubo.github.io/real/copyright/degema97.aac" },
+    { key: "i'm not ready", src: "https://wisdomokubo.github.io/real/copyright/degema98.aac" },
+    { key: "it depends", src: "https://wisdomokubo.github.io/real/copyright/degema99.aac" },
+    { key: "it's complicated", src: "https://wisdomokubo.github.io/real/copyright/degema100.aac" },
+    
+    
     { key: "akuvo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english1.wav" },
-    { key: "akufo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english1.wav" },
-    { key: "alcohol", src: "https://wisdomokubo1.github.io/jikoro/copyright/english1.wav" },
-    { key: "acroval", src: "https://wisdomokubo1.github.io/jikoro/copyright/english1.wav" },
-    { key: "me daddy", src: "https://wisdomokubo1.github.io/jikoro/copyright/english7.wav" },
-    { key: "me dairy", src: "https://wisdomokubo1.github.io/jikoro/copyright/english7.wav" },
-    { key: "isom akpowei", src: "https://wisdomokubo1.github.io/jikoro/copyright/english10.wav" },
+    { key: "imo nami worla", src: "https://wisdomokubo1.github.io/jikoro/copyright/english2.wav" },
+    { key: "isom ma mi monwon", src: "https://wisdomokubo1.github.io/jikoro/copyright/english3.wav" },
+    { key: "uya bavo uyin", src: "https://wisdomokubo1.github.io/jikoro/copyright/english4.wav" },
+    { key: "akuvo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english5.wav" },
+    { key: "mu kpene imo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english6.wav" },
+    { key: "mi deri", src: "https://wisdomokubo1.github.io/jikoro/copyright/english7.wav" },
+    { key: "isom akuvi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english8.wav" },
+    { key: "mi memen", src: "https://wisdomokubo1.github.io/jikoro/copyright/english9.wav" },
+    { key: "mi meme", src: "https://wisdomokubo1.github.io/jikoro/copyright/english10.wav" },
+    
+    { key: "meya ghen", src: "https://wisdomokubo1.github.io/jikoro/copyright/english11.wav" },
     { key: "sindio", src: "https://wisdomokubo1.github.io/jikoro/copyright/english12.wav" },
-    { key: "cindyo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english12.wav" },
-    { key: "send you", src: "https://wisdomokubo1.github.io/jikoro/copyright/english12.wav" },
-    { key: "cindy yo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english12.wav" },
     { key: "soso", src: "https://wisdomokubo1.github.io/jikoro/copyright/english13.wav" },
-    { key: "so so", src: "https://wisdomokubo1.github.io/jikoro/copyright/english13.wav" },
-    { key: "so so wa", src: "https://wisdomokubo1.github.io/jikoro/copyright/english13.wav" },
-    { key: "sew sew", src: "https://wisdomokubo1.github.io/jikoro/copyright/english13.wav" },
+    { key: "uwokpowei", src: "https://wisdomokubo1.github.io/jikoro/copyright/english14.wav" },
+    { key: "alua", src: "https://wisdomokubo1.github.io/jikoro/copyright/english15.wav" },
+    { key: "uwen mu yonkmubo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english16.wav" },
+    { key: "ini wo oyin imo", src: "https://wisdomokubo1.github.io/jikoro/copyright/english17.wav" },
+    { key: "emon oho-ovi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english18.wav" },
+    { key: "za akuvi", src: "https://wisdomokubo1.github.io/jikoro/copyright/english19.wav" },
+    { key: "ohovi emon", src: "https://wisdomokubo1.github.io/jikoro/copyright/english20.wav" },
+    
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english21.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english22.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english23.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english24.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english25.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english26.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english27.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english28.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english29.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english30.wav" },
+    
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english31.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english32.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english33.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english34.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english35.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english36.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english37.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english38.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english39.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english40.wav" },
+    
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english41.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english42.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english43.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english44.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english45.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english46.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english47.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english48.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english49.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english50.wav" },
+    
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english51.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english52.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english53.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english54.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english55.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english56.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english57.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english58.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english59.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english60.wav" },
+    
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english61.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english62.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english63.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english64.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english65.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english66.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english67.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english68.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english69.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english70.wav" },
+    
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english71.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english72.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english73.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english74.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english75.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english76.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english77.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english78.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english79.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english80.wav" },
+    
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english81.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english82.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english83.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english84.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english85.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english86.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english87.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english88.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english89.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english90.wav" },
+    
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english91.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english92.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english93.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english94.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english95.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english96.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english97.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english98.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english99.wav" },
+    { key: "", src: "https://wisdomokubo1.github.io/jikoro/copyright/english100.wav" },
     ];
 
     const statusEl = document.getElementById('status');
