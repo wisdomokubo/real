@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sophia</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: black;
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s infinite;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+
+    <!-- Main Content Container -->
+    <main class="max-w-4xl mx-auto px-4 py-6 sm:py-10 flex-grow w-full">
+
+        <!-- 1. SETUP SCREEN -->
+        <section id="setup-screen" class="space-y-8">
+            <div class="text-center max-w-2xl mx-auto space-y-3">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                    Master Vocabulary Through <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-900">Active Recall</span>
+                </h2>
+            <button onclick="app.selectDeck('deg-en')"  class="whitespace-nowrap px-20 py-4 bg-green-700 hover:bg-green-900 text-white font-semibold text-sm rounded-xl transition-all shadow-md hover:shadow-green-500/30">Start Degema Quiz <i class="fa-solid fa-arrow-right ml-1 text-xs"></i></button>
+            <br>
+
+            </div>
+
+            <!-- Custom Deck Shortcut Banner -->
+            <div class="bg-gradient-to-r from-amber-900 to-amber-500 rounded-2xl p-6 text-white flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
+                <div class="space-y-1 text-center md:text-left">
+                    <h4 class="font-bold text-lg flex items-center justify-center md:justify-start gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-blue-400"></i> Premium Feature </h4>
+                    <p class="text-slate-300 text-sm">Have specific words you want to study for an exam or trip? Paste or create your own custom vocabulary list.</p>
+                </div>
+                <button onclick="app.showScreen('custom-editor')" class="whitespace-nowrap px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm rounded-xl transition-all shadow-md hover:shadow-blue-500/30">
+                    Build Custom Deck
+                </button>
+            </div>
+        </section>
+
+
+        <!-- 2. QUIZ SCREEN -->
+        <section id="quiz-screen" class="hidden space-y-6">
+            <!-- Top Dashboard Stats -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <button onclick="app.endSession()" class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-slate-100 transition-colors" title="End Session">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                    <div>
+                        <span id="deck-title-badge" class="text-xs font-bold uppercase tracking-wider text-green-600 bg-green-50 px-2.5 py-1 rounded-md">Deck Name</span>
+                    </div>
+                </div>
+
+                <!-- Live Performance Indicators -->
+                <div class="flex items-center space-x-6 sm:space-x-8 text-center">
+                    <div>
+                        <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">Score</div>
+                        <div id="stat-score" class="text-lg font-extrabold text-slate-800">0</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">Streak</div>
+                        <div id="stat-streak" class="text-lg font-extrabold text-amber-500 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-fire text-sm animate-bounce"></i> <span>0</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">Accuracy</div>
+                        <div id="stat-accuracy" class="text-lg font-extrabold text-slate-800">100%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Question Card -->
+            <div id="question-card" class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-lg text-center space-y-6 relative overflow-hidden transition-all">
+                
+                <!-- Prompt Header -->
+                <div class="space-y-2">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Translate this term</div>
+                    <div class="flex items-center justify-center gap-3">
+                        <h2 id="question-term" class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">Bonjour</h2>
+                        <button id="speak-term-btn" onclick="app.speakCurrentTerm()" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-green-100 text-slate-600 hover:text-green-600 flex items-center justify-center transition-colors shadow-sm" title="Listen Pronunciation">
+                            <i class="fa-solid fa-volume-high"></i>
+                    <audio id="audio" src=""></audio>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Answer Choices Grid (2x2) -->
+                <div id="options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-4 max-w-2xl mx-auto">
+                    <!-- Option buttons dynamically generated -->
+                </div>
+
+                <!-- Action Footer (Next Button / Feedback area) -->
+                <div id="feedback-bar" class="hidden pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div id="feedback-text" class="text-sm font-semibold flex items-center gap-2">
+                        <!-- Message populated dynamically -->
+                    </div>
+                    <button id="next-btn" onclick="app.nextQuestion()" class="w-full sm:w-auto px-8 py-3 bg-green-600 hover:bg-green-700 active:scale-95 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2">
+                        <span>Next Question</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 3. CUSTOM DECK EDITOR SCREEN -->
+        <section id="custom-editor-screen" class="hidden space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Vocabulary Manager</h2>
+                    <p class="text-xs sm:text-sm text-slate-500">Edit existing terms or create custom flashcard sets.</p>
+                </div>
+                <button onclick="app.showScreen('setup')" class="text-sm font-semibold text-slate-600 hover:text-slate-800 bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded-xl transition-all">
+                    Back to Setup
+                </button>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+                <!-- Select or Create Title -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Deck Title</label>
+                        <input type="text" id="custom-deck-name" placeholder="e.g. Italian Basics" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Target Language (For Speech Synthesis)</label>
+                        <select id="custom-deck-lang" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm font-semibold">
+                            <option value="es-ES">Spanish (es-ES)</option>
+                            <option value="fr-FR">French (fr-FR)</option>
+                            <option value="de-DE">German (de-DE)</option>
+                            <option value="it-IT">Italian (it-IT)</option>
+                            <option value="pt-BR">Portuguese (pt-BR)</option>
+                            <option value="en-US">English (en-US)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Input Textarea for Batch Importing -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-bold uppercase text-slate-500">Pairs Input (Format: Term = Translation)</label>
+                        <span class="text-xs text-slate-400">One pair per line</span>
+                    </div>
+                    <textarea id="custom-deck-text" rows="8" placeholder="Hola = Hello&#10;Gracias = Thank you&#10;Por favor = Please" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-xs sm:text-sm leading-relaxed"></textarea>
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <button onclick="app.loadSampleIntoEditor()" class="text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors">
+                        <i class="fa-solid fa-file-import mr-1"></i> Load Template Sample
+                    </button>
+                    <button onclick="app.saveCustomDeckAndStart()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition-all">
+                        Save & Play Deck
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 4. SESSION SUMMARY SCREEN -->
+        <section id="summary-screen" class="hidden space-y-6">
+            <div class="text-center space-y-2">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 text-amber-500 text-3xl mb-2">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h2 class="text-3xl font-extrabold text-white">Session Complete!</h2>
+                <p class="text-sm text-white">Great work! Here is how you performed during this round.</p>
+            </div>
+
+            <!-- Performance Stats Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="bg-white border border-slate-200 p-4 rounded-2xl text-center shadow-sm">
+                    <div class="text-xs font-bold text-slate-400 uppercase">Final Score</div>
+                    <div id="sum-score" class="text-2xl font-black text-slate-800 mt-1">0</div>
+                </div>
+                <div class="bg-white border border-slate-200 p-4 rounded-2xl text-center shadow-sm">
+                    <div class="text-xs font-bold text-slate-400 uppercase">Accuracy</div>
+                    <div id="sum-accuracy" class="text-2xl font-black text-indigo-600 mt-1">0%</div>
+                </div>
+                <div class="bg-white border border-slate-200 p-4 rounded-2xl text-center shadow-sm">
+                    <div class="text-xs font-bold text-slate-400 uppercase">Longest Streak</div>
+                    <div id="sum-streak" class="text-2xl font-black text-amber-500 mt-1">0</div>
+                </div>
+                <div class="bg-white border border-slate-200 p-4 rounded-2xl text-center shadow-sm">
+                    <div class="text-xs font-bold text-slate-400 uppercase">Questions</div>
+                    <div id="sum-total" class="text-2xl font-black text-slate-800 mt-1">0</div>
+                </div>
+            </div>
+
+            <!-- Unlocked Badges Section -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+                <h3 class="font-bold text-sm text-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-award text-indigo-500"></i> Session Achievements
+                </h3>
+                <div id="badges-container" class="flex flex-wrap gap-2">
+                    <!-- Badges injected via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Missed Terms Review Section -->
+            <div id="missed-terms-card" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+                <h3 class="font-bold text-sm text-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-exclamation text-rose-500"></i> Terms To Review (<span id="missed-count">0</span>)
+                </h3>
+                <div id="missed-list" class="divide-y divide-slate-100 max-h-48 overflow-y-auto pr-1">
+                    <!-- Dynamic review list -->
+                </div>
+            </div>
+
+            <!-- Actions Footer -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
+                <button onclick="app.restartSession()" class="w-full sm:w-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold text-sm rounded-xl shadow-md transition-all">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> Play Again
+                </button>
+                <button onclick="app.showScreen('setup')" class="w-full sm:w-auto px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-sm rounded-xl transition-all">
+                    Back to Home
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        /**
+         * Preloaded Vocabulary Datasets
+         */
+        const PRELOADED_DECKS = {
+                'deg-en': {
+                title: 'English → Degema',
+                langCode: 'en-US',
+                pairs: [
+                    { term: 'How are you?', translation: 'Akuvo' },
+                    { term: "What's up", translation: 'Imo mi worla' },
+                    { term: 'Nice to meet you', translation: 'Isom ma mi monwon' },
+                    { term: 'Where are you from?', translation: 'Uya bavo uyin' },
+                    { term: 'What do you do?', translation: 'Mu kpene imo' },
+                    { term: "I don't know", translation: "Mi deri" },
+                    { term: "That's good", translation: "Isom akuvi" },
+                    { term: 'I agree', translation: 'Mi memen' },
+                    { term: 'I disagree', translation: 'Mi mémé' },
+                    
+                    { term: 'Excuse me', translation: 'Meya ghen' },
+                    { term: 'Sorry',
+                    translation: 'Sindio'
+                    },
+                    { term: 'Please',
+                    translation: 'Sósó'
+                    },
+                    { term: 'Thank you',
+                    translation: 'Uwokpówei'
+                    },
+                    { term: "You're welcome",
+                    translation: "Alua"
+                    },
+                    { term: 'Can you help me?',
+                    translation: 'Úwen mu yonkmúbō'
+                    },
+                    { term: "What's your name?",
+                    translation: "Ini wō óyin imo"
+                    },
+                    { term: 'See you later',
+                    translation: 'Emon oho-ovi'
+                    },
+                    { term: 'Take care',
+                    translation: 'Za akuvi'
+                    },
+                    { term: 'Goodbye',
+                    translation: 'Ohovi emon'
+                    },
+                    { term: 'God',
+                    translation: 'Oswo'
+                    },
+                ]
+            },
+            'es-en': {
+                title: 'Spanish → English',
+                langCode: 'es-ES',
+                pairs: [
+                    { term: 'Hola', translation: 'Hello' },
+                    { term: 'Gracias', translation: 'Thank you' },
+                    { term: 'Por favor', translation: 'Please' },
+                    { term: 'Buenos días', translation: 'Good morning' },
+                    { term: 'Buenas noches', translation: 'Good evening' },
+                    { term: '¿Cómo estás?', translation: 'How are you?' },
+                    { term: 'Adiós', translation: 'Goodbye' },
+                    { term: 'Sí', translation: 'Yes' },
+                    { term: 'No', translation: 'No' },
+                    { term: 'Amigo', translation: 'Friend' },
+                    { term: 'Comida', translation: 'Food' },
+                    { term: 'Agua', translation: 'Water' },
+                    { term: 'Casa', translation: 'House' },
+                    { term: 'Perro', translation: 'Dog' },
+                    { term: 'Gato', translation: 'Cat' },
+                    { term: 'Libro', translation: 'Book' },
+                    { term: 'Escuela', translation: 'School' },
+                    { term: 'Trabajo', translation: 'Work' },
+                    { term: 'Familia', translation: 'Family' },
+                    { term: 'Tiempo', translation: 'Time' },
+                    { term: 'Hoy', translation: 'Today' },
+                    { term: 'Mañana', translation: 'Tomorrow' },
+                    { term: 'Siempre', translation: 'Always' },
+                    { term: 'Nunca', translation: 'Never' },
+                    { term: 'Feliz', translation: 'Happy' },
+                    { term: 'Hermoso', translation: 'Beautiful' },
+                    { term: 'Pequeño', translation: 'Small' },
+                    { term: 'Grande', translation: 'Big' },
+                    { term: 'Entender', translation: 'To understand' },
+                    { term: 'Aprender', translation: 'To learn' }
+                ]
+            },
+            'fr-en': {
+                title: 'French → English',
+                langCode: 'fr-FR',
+                pairs: [
+                    { term: 'Bonjour', translation: 'Hello / Good day' },
+                    { term: 'Merci', translation: 'Thank you' },
+                    { term: 'S\'il vous plaît', translation: 'Please' },
+                    { term: 'Oui', translation: 'Yes' },
+                    { term: 'Non', translation: 'No' },
+                    { term: 'Au revoir', translation: 'Goodbye' },
+                    { term: 'Amour', translation: 'Love' },
+                    { term: 'Pain', translation: 'Bread' },
+                    { term: 'Eau', translation: 'Water' },
+                    { term: 'Nuit', translation: 'Night' },
+                    { term: 'Ami', translation: 'Friend' },
+                    { term: 'Voiture', translation: 'Car' },
+                    { term: 'Chat', translation: 'Cat' },
+                    { term: 'Chien', translation: 'Dog' },
+                    { term: 'Maison', translation: 'House' },
+                    { term: 'Monde', translation: 'World' },
+                    { term: 'Raison', translation: 'Reason' },
+                    { term: 'Soleil', translation: 'Sun' },
+                    { term: 'Lune', translation: 'Moon' },
+                    { term: 'Ciel', translation: 'Sky' },
+                    { term: 'Heureux', translation: 'Happy' },
+                    { term: 'Beau', translation: 'Beautiful' },
+                    { term: 'Manger', translation: 'To eat' },
+                    { term: 'Boire', translation: 'To drink' },
+                    { term: 'Dormir', translation: 'To sleep' },
+                    { term: 'Parler', translation: 'To speak' },
+                    { term: 'Voyager', translation: 'To travel' },
+                    { term: 'Toujours', translation: 'Always' },
+                    { term: 'Jamais', translation: 'Never' },
+                    { term: 'Maintenant', translation: 'Now' }
+                ]
+            },
+            'de-en': {
+                title: 'German → English',
+                langCode: 'de-DE',
+                pairs: [
+                    { term: 'Hallo', translation: 'Hello' },
+                    { term: 'Danke', translation: 'Thank you' },
+                    { term: 'Bitte', translation: 'Please / You are welcome' },
+                    { term: 'Guten Morgen', translation: 'Good morning' },
+                    { term: 'Auf Wiedersehen', translation: 'Goodbye' },
+                    { term: 'Ja', translation: 'Yes' },
+                    { term: 'Nein', translation: 'No' },
+                    { term: 'Freund', translation: 'Friend' },
+                    { term: 'Wasser', translation: 'Water' },
+                    { term: 'Brot', translation: 'Bread' },
+                    { term: 'Haus', translation: 'House' },
+                    { term: 'Hund', translation: 'Dog' },
+                    { term: 'Katze', translation: 'Cat' },
+                    { term: 'Buch', translation: 'Book' },
+                    { term: 'Zeit', translation: 'Time' },
+                    { term: 'Glücklich', translation: 'Happy' },
+                    { term: 'Schön', translation: 'Beautiful / Nice' },
+                    { term: 'Groß', translation: 'Big / Tall' },
+                    { term: 'Klein', translation: 'Small' },
+                    { term: 'Essen', translation: 'To eat' },
+                    { term: 'Trinken', translation: 'To drink' },
+                    { term: 'Sprechen', translation: 'To speak' },
+                    { term: 'Verstehen', translation: 'To understand' },
+                    { term: 'Lernen', translation: 'To learn' },
+                    { term: 'Heute', translation: 'Today' },
+                    { term: 'Morgen', translation: 'Tomorrow' },
+                    { term: 'Immer', translation: 'Always' },
+                    { term: 'Nie', translation: 'Never' },
+                    { term: 'Arbeit', translation: 'Work' },
+                    { term: 'Familie', translation: 'Family' }
+                ]
+            }
+        };
+
+        /**
+         * Web Audio Synthesizer (for sound FX without external assets)
+         */
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+            }
+
+            playCorrect() {
+                if (!app.audioEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+
+            playIncorrect() {
+                if (!app.audioEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now); // A3
+                osc.frequency.setValueAtTime(180, now + 0.1);
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+        }
+
+        /**
+         * Main Application Controller Class
+         */
+        class LingoPulseApp {
+            constructor() {
+                // Audio & TTS states
+                this.audioEnabled = true;
+                this.ttsEnabled = true;
+                this.soundFX = new SoundFX();
+
+                // Current Active Deck Data
+                this.currentDeck = null;
+                
+                // Quiz Session State
+                this.score = 0;
+                this.streak = 0;
+                this.maxStreak = 0;
+                this.totalAnswered = 0;
+                this.correctAnswers = 0;
+                this.currentQuestion = null;
+                this.isAnswered = false;
+
+                // Track missed terms
+                this.missedTermsMap = new Map(); // term -> translation
+            }
+
+            init() {
+                this.showScreen('setup');
+                this.updateAudioIcons();
+            }
+
+            /**
+             * Screen Switcher Logic
+             */
+            showScreen(screenId) {
+                const screens = ['setup', 'quiz', 'custom-editor', 'summary'];
+                screens.forEach(id => {
+                    const el = document.getElementById(`${id}-screen`);
+                    if (el) {
+                        if (id === screenId) {
+                            el.classList.remove('hidden');
+                        } else {
+                            el.classList.add('hidden');
+                        }
+                    }
+                });
+            }
+
+            /**
+             * Audio / TTS Toggles
+             */
+            toggleAudio() {
+                this.audioEnabled = !this.audioEnabled;
+                this.updateAudioIcons();
+            }
+
+            toggleTTS() {
+                this.ttsEnabled = !this.ttsEnabled;
+                this.updateAudioIcons();
+            }
+
+            updateAudioIcons() {
+                const audioIcon = document.getElementById('audio-icon');
+                const ttsIcon = document.getElementById('tts-icon');
+
+                if (this.audioEnabled) {
+                    audioIcon.className = "fa-solid fa-volume-high text-lg text-slate-700";
+                } else {
+                    audioIcon.className = "fa-solid fa-volume-xmark text-lg text-slate-400";
+                }
+
+                if (this.ttsEnabled) {
+                    ttsIcon.className = "fa-solid fa-comment-dots text-lg text-indigo-600";
+                } else {
+                    ttsIcon.className = "fa-solid fa-comment-slash text-lg text-slate-400";
+                }
+            }
+
+
+
+            /**
+             * Text to Speech Pronunciation
+             */
+            speakCurrentTerm() {
+                if (!('speechSynthesis' in window) || !this.currentQuestion) return;
+
+                window.speechSynthesis.cancel(); // Stop prior speech
+
+                const utterance = new SpeechSynthesisUtterance(this.currentQuestion.pair.term);
+                if (this.currentDeck && this.currentDeck.langCode) {
+                    utterance.lang = this.currentDeck.langCode;
+                }
+                utterance.rate = 0.9; // Slightly slower for clarity
+                window.speechSynthesis.speak(utterance);
+            }
+
+            /**
+             * Select Deck & Start Quiz
+             */
+            selectDeck(deckKey) {
+                if (PRELOADED_DECKS[deckKey]) {
+                    this.currentDeck = PRELOADED_DECKS[deckKey];
+                    this.startSession();
+                }
+            }
+
+            /**
+             * Start / Reset Quiz Session
+             */
+            startSession() {
+                if (!this.currentDeck || !this.currentDeck.pairs || this.currentDeck.pairs.length < 4) {
+                    alert('A minimum of 4 vocabulary pairs is required to start the quiz.');
+                    return;
+                }
+
+                // Reset session counters
+                this.score = 0;
+                this.streak = 0;
+                this.maxStreak = 0;
+                this.totalAnswered = 0;
+                this.correctAnswers = 0;
+                this.missedTermsMap.clear();
+
+                // Update UI Badges
+                document.getElementById('deck-title-badge').innerText = this.currentDeck.title;
+                this.updateStatsUI();
+
+                // Transition to Quiz Screen & Generate Question
+                this.showScreen('quiz');
+                this.nextQuestion();
+            }
+
+            restartSession() {
+                this.startSession();
+            }
+
+            /**
+             * Generate Random Multiple Choice Question
+             */
+            nextQuestion() {
+                this.isAnswered = false;
+                document.getElementById('feedback-bar').classList.add('hidden');
+
+                const pairs = this.currentDeck.pairs;
+
+                // Pick 1 random pair as target question
+                const targetPair = pairs[Math.floor(Math.random() * pairs.length)];
+
+                // Gather 3 distinct wrong distractors
+                const distractors = [];
+                const otherPairs = pairs.filter(p => p.translation !== targetPair.translation);
+
+                while (distractors.length < 3 && otherPairs.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * otherPairs.length);
+                    const picked = otherPairs.splice(randomIndex, 1)[0];
+                    distractors.push(picked.translation);
+                }
+
+                // Combine correct answer + distractors and shuffle
+                const options = [targetPair.translation, ...distractors];
+                this.shuffleArray(options);
+
+                this.currentQuestion = {
+                    pair: targetPair,
+                    options: options
+                };
+
+                // Render Question UI
+                document.getElementById('question-term').innerText = targetPair.term;
+                this.renderOptionsGrid();
+
+                // Play Speech automatically if TTS enabled
+                if (this.ttsEnabled) {
+                    setTimeout(() => this.speakCurrentTerm(), 200);
+                }
+            }
+
+            /**
+             * Render Choice Buttons
+             */
+            renderOptionsGrid() {
+                const grid = document.getElementById('options-grid');
+                grid.innerHTML = '';
+
+                this.currentQuestion.options.forEach((optionText, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "option-btn w-full p-4 text-left font-semibold text-slate-700 bg-slate-50 hover:bg-indigo-50 border-2 border-slate-200 hover:border-indigo-400 rounded-xl transition-all flex items-center justify-between group";
+                    
+                    btn.innerHTML = `
+                        <span class="text-sm sm:text-base">${optionText}</span>
+                        <span class="w-6 h-6 rounded-full border border-slate-300 group-hover:border-indigo-500 flex items-center justify-center text-xs text-transparent group-hover:text-indigo-500 transition-all">
+                            <i class="fa-solid fa-check"></i>
+                        </span>
+                    `;
+
+                    btn.onclick = () => this.handleAnswer(optionText, btn);
+                    grid.appendChild(btn);
+                });
+            }
+
+            /**
+             * Handle Answer Selection
+             */
+            handleAnswer(selectedOption, clickedBtn) {
+                if (this.isAnswered) return;
+                this.isAnswered = true;
+
+                const correctTranslation = this.currentQuestion.pair.translation;
+                const isCorrect = (selectedOption === correctTranslation);
+
+                this.totalAnswered++;
+
+                const allOptionBtns = document.querySelectorAll('.option-btn');
+                allOptionBtns.forEach(btn => {
+                    btn.disabled = true;
+                    btn.classList.remove('hover:bg-indigo-50', 'hover:border-indigo-400');
+                    
+                    // Highlight correct option in green
+                    if (btn.innerText.includes(correctTranslation)) {
+                        btn.className = "option-btn w-full p-4 text-left font-semibold text-emerald-800 bg-emerald-50 border-2 border-emerald-500 rounded-xl flex items-center justify-between";
+                        btn.querySelector('span:last-child').className = "w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs";
+                    }
+                });
+
+                const feedbackBar = document.getElementById('feedback-bar');
+                const feedbackText = document.getElementById('feedback-text');
+                feedbackBar.classList.remove('hidden');
+
+                if (isCorrect) {
+                    this.score += 10 + Math.min(this.streak * 2, 20); // Bonus score for streak
+                    this.streak++;
+                    this.correctAnswers++;
+                    if (this.streak > this.maxStreak) this.maxStreak = this.streak;
+
+                    this.soundFX.playCorrect();
+
+                    clickedBtn.classList.add('animate-pulse-subtle');
+                    feedbackText.className = "text-sm font-bold text-emerald-600 flex items-center gap-2";
+                    feedbackText.innerHTML = `<i class="fa-solid fa-circle-check text-lg"></i> Correct! Excellent job.`;
+                } else {
+                    this.streak = 0; // Reset streak
+                    this.soundFX.playIncorrect();
+
+                    // Track as missed word
+                    this.missedTermsMap.set(
+                        this.currentQuestion.pair.term,
+                        this.currentQuestion.pair.translation
+                    );
+
+                    clickedBtn.className = "option-btn w-full p-4 text-left font-semibold text-rose-800 bg-rose-50 border-2 border-rose-500 rounded-xl flex items-center justify-between animate-shake";
+                    
+                    feedbackText.className = "text-sm font-bold text-rose-600 flex items-center gap-2";
+                    feedbackText.innerHTML = `<i class="fa-solid fa-circle-xmark text-lg"></i> Incorrect. The answer is "${correctTranslation}".`;
+                }
+
+                this.updateStatsUI();
+            }
+
+            /**
+             * Update Dashboard Header Counters
+             */
+            updateStatsUI() {
+                document.getElementById('stat-score').innerText = this.score;
+                document.getElementById('stat-streak').querySelector('span').innerText = this.streak;
+
+                const acc = this.totalAnswered > 0 
+                    ? Math.round((this.correctAnswers / this.totalAnswered) * 100) 
+                    : 100;
+                document.getElementById('stat-accuracy').innerText = `${acc}%`;
+            }
+
+            /**
+             * End Quiz & Display Summary
+             */
+            endSession() {
+                if (this.totalAnswered === 0) {
+                    this.showScreen('setup');
+                    return;
+                }
+
+                // Populate Summary Values
+                const accuracy = Math.round((this.correctAnswers / this.totalAnswered) * 100);
+                document.getElementById('sum-score').innerText = this.score;
+                document.getElementById('sum-accuracy').innerText = `${accuracy}%`;
+                document.getElementById('sum-streak').innerText = this.maxStreak;
+                document.getElementById('sum-total').innerText = this.totalAnswered;
+
+                // Render Unlockable Session Badges
+                this.renderSummaryBadges(accuracy);
+
+                // Render Missed Words Review
+                this.renderMissedWords();
+
+                this.showScreen('summary');
+            }
+
+            renderSummaryBadges(accuracy) {
+                const container = document.getElementById('badges-container');
+                container.innerHTML = '';
+
+                const badges = [];
+
+                if (this.totalAnswered >= 10) {
+                    badges.push({ name: 'Persistent Learner', icon: 'fa-bolt', color: 'bg-amber-100 text-amber-700' });
+                }
+                if (accuracy >= 90 && this.totalAnswered >= 5) {
+                    badges.push({ name: 'Sharp Shooter', icon: 'fa-bullseye', color: 'bg-emerald-100 text-emerald-700' });
+                }
+                if (this.maxStreak >= 5) {
+                    badges.push({ name: 'On Fire', icon: 'fa-fire', color: 'bg-orange-100 text-orange-700' });
+                }
+                if (badges.length === 0) {
+                    badges.push({ name: 'Session Finisher', icon: 'fa-check-double', color: 'bg-indigo-100 text-indigo-700' });
+                }
+
+                badges.forEach(b => {
+                    const span = document.createElement('span');
+                    span.className = `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs ${b.color}`;
+                    span.innerHTML = `<i class="fa-solid ${b.icon}"></i> ${b.name}`;
+                    container.appendChild(span);
+                });
+            }
+
+            renderMissedWords() {
+                const list = document.getElementById('missed-list');
+                const countBadge = document.getElementById('missed-count');
+                list.innerHTML = '';
+
+                countBadge.innerText = this.missedTermsMap.size;
+
+                if (this.missedTermsMap.size === 0) {
+                    list.innerHTML = `<div class="py-4 text-center text-xs text-slate-400">Perfect round! You didn't miss any words.</div>`;
+                    return;
+                }
+
+                this.missedTermsMap.forEach((translation, term) => {
+                    const row = document.createElement('div');
+                    row.className = "py-2 flex items-center justify-between text-xs sm:text-sm";
+                    row.innerHTML = `
+                        <span class="font-bold text-slate-800">${term}</span>
+                        <span class="text-slate-500">${translation}</span>
+                    `;
+                    list.appendChild(row);
+                });
+            }
+
+            /**
+             * Custom Editor Logic
+             */
+            loadSampleIntoEditor() {
+                document.getElementById('custom-deck-name').value = "Italian Essentials";
+                document.getElementById('custom-deck-lang').value = "it-IT";
+                document.getElementById('custom-deck-text').value = 
+`Ciao = Hello / Bye
+Grazie = Thank you
+Per favore = Please
+Si = Yes
+No = No
+Buon giorno = Good morning
+Amico = Friend
+Pizza = Pizza
+Vino = Wine`;
+            }
+
+            saveCustomDeckAndStart() {
+                const nameInput = document.getElementById('custom-deck-name').value.trim();
+                const langInput = document.getElementById('custom-deck-lang').value;
+                const textInput = document.getElementById('custom-deck-text').value.trim();
+
+                if (!nameInput || !textInput) {
+                    alert('Please provide both a deck title and vocabulary pairs.');
+                    return;
+                }
+
+                const lines = textInput.split('\n');
+                const pairs = [];
+
+                lines.forEach(line => {
+                    if (line.includes('=')) {
+                        const parts = line.split('=');
+                        const term = parts[0].trim();
+                        const translation = parts[1].trim();
+
+                        if (term && translation) {
+                            pairs.push({ term, translation });
+                        }
+                    }
+                });
+
+                if (pairs.length < 4) {
+                    alert('Please provide at least 4 valid pairs formatted as: Term = Translation');
+                    return;
+                }
+
+                this.currentDeck = {
+                    title: nameInput,
+                    langCode: langInput,
+                    pairs: pairs
+                };
+
+                this.startSession();
+            }
+
+            /**
+             * Array Shuffler Utility
+             */
+            shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+        }
+
+        // Initialize Global App Instance on Window Load
+        let app;
+        window.onload = function() {
+            app = new LingoPulseApp();
+            app.init();
+        };
+    </script>
+      <script>
+        function playAudio() {
+            var audio = document.getElementById('audio');
+            audio.play();
+        }
+    </script>
+    
+     <script>
+        function changeColorAndPlayAudio() {
+            var button = document.getElementById('rightButton');
+            var audio = document.getElementById('audio1');
+            button.style.backgroundColor = 'green';
+            audio.play();
+        }
+    </script>
+        
+     <script>
+        function changeColorAndPlayAudioFalse() {
+            var button = document.getElementById('wrongButton');
+            var audio = document.getElementById('audio2');
+            button.style.backgroundColor = 'red';
+            audio.play();
+        }
+    </script>
+    
+     <script>
+        function changeColorAndPlayAudioStillFalse() {
+            var button = document.getElementById('wrongButtonTwo');
+            var audio = document.getElementById('audio3');
+            button.style.backgroundColor = 'red';
+            audio.play();
+        }
+    </script>
+</body>
+</html>
