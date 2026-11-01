@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Prevent zooming, force exact device scale, and enable safe area padding for notched displays -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Space Defender - Language Learning</title>
+  <style>
+    :root {
+      --bg-dark: #0d0f18;
+      --card-bg: rgba(23, 27, 44, 0.85);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent: #22d3ee;
+      --accent-danger: #ef4444;
+      --accent-success: #10b981;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      height: -webkit-fill-available;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 600px; /* Constrains desktop while fitting mobile seamlessly */
+      background: radial-gradient(circle at center, #1e1b4b 0%, #090a0f 100%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HUD Overlay */
+    #hud {
+      position: absolute;
+      top: env(safe-area-inset-top, 10px);
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .hud-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #prompt-banner {
+      position: absolute;
+      top: calc(env(safe-area-inset-top, 10px) + 48px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.9);
+      border: 2px solid var(--accent);
+      box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+      padding: 8px 18px;
+      border-radius: 25px;
+      text-align: center;
+      z-index: 10;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 90%;
+    }
+
+    #prompt-text {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .audio-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #000;
+      flex-shrink: 0;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Mobile On-Screen Controls */
+    #mobile-controls {
+      position: absolute;
+      bottom: calc(env(safe-area-inset-bottom, 10px) + 10px);
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .touch-btn-group {
+      display: flex;
+      gap: 12px;
+      pointer-events: auto;
+    }
+
+    .touch-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(4px);
+      color: white;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      active-bg: var(--primary);
+    }
+
+    .touch-btn:active {
+      background: var(--primary);
+      transform: scale(0.95);
+    }
+
+    #fire-btn {
+      width: 70px;
+      height: 70px;
+      background: rgba(239, 68, 68, 0.3);
+      border-color: var(--accent-danger);
+    }
+
+    #fire-btn:active {
+      background: var(--accent-danger);
+    }
+
+    /* Menus & Overlays */
+    .overlay-screen {
+      position: absolute;
+      inset: 0;
+      background: rgba(13, 15, 24, 0.95);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      z-index: 20;
+      text-align: center;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p {
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      max-width: 280px;
+      margin: 6px 0;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <!-- HUD -->
+    <div id="hud">
+      <div class="hud-card" id="score-card">Score: <span id="score-val">0</span></div>
+      <div class="hud-card" id="lives-card">❤️ <span id="lives-val">3</span></div>
+    </div>
+
+    <!-- Target Vocab Prompt -->
+    <div id="prompt-banner">
+      <span id="prompt-text">Loading...</span>
+      <button class="audio-btn" id="prompt-audio-btn">🔊</button>
+    </div>
+
+    <!-- Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Touch Controls -->
+    <div id="mobile-controls">
+      <div class="touch-btn-group">
+        <div class="touch-btn" id="left-btn">◀</div>
+        <div class="touch-btn" id="right-btn">▶</div>
+      </div>
+      <div class="touch-btn-group">
+        <div class="touch-btn" id="fire-btn">🔥</div>
+      </div>
+    </div>
+
+    <!-- Main Menu Screen -->
+    <div id="start-screen" class="overlay-screen">
+      <h1>Space Defender</h1>
+      <p>Tap falling asteroids or use on-screen controls to shoot the matching translation! Best enjoyed in landscape mode</p>
+      <button class="btn" id="start-btn">Start Game</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="overlay-screen hidden">
+      <h1 style="color: var(--accent-danger);">Game Over</h1>
+      <p>Final Score: <span id="final-score">0</span></p>
+      <button class="btn" id="restart-btn">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    // --- Mobile & Game Logic Setup ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('game-container');
+
+    // Sample Vocabulary Dataset
+    const vocabList = [
+      { term: "Akuvo", match: "How are you" },
+      { term: "Uwokpówei", match: "Thank you" },
+      { term: "Sindio", match: "Sorry" },
+      { term: "Sósó", match: "Please" },
+      { term: "Amin", match: "Water" },
+      { term: "Ovre", match: "Friend" },
+      { term: "Úvaì", match: "House" },
+      { term: "Ovu", match: "One" },
+      { term: "Iva", match: "Two" },
+      { term: "Isai", match: "Three" },
+      { term: "Ohovi emon", match: "Goodbye" },
+      { term: "Alua", match: "Welcome" },
+      { term: "Ubo", match: "Hand" },
+      { term: "Utom", match: "Head" },
+      { term: "Avi", match: "Leg" },
+      { term: "Ukosum", match: "Back" },
+      { term: "Ini", match: "Four" },
+      { term: "Iswon", match: "Five" },
+      { term: "Ukor", match: "Car" },
+      { term: "Owite", match: "Good Morning" },
+      { term: "Obite", match: "Good Evening" },
+      { term: "Odisante", match: "Good Afternoon" },
+      { term: "Ikpoki", match: "Money" },
+      { term: "Aki", match: "Pot" },
+      { term: "Pani", match: "Plate" },
+      { term: "Sosi", match: "Church" },
+      { term: "Omosi", match: "Man" },
+      { term: "Omo", match: "Child" },
+      { term: "Oftam", match: "Woman" },
+      { term: "Ubovi", match: "Right" },
+      { term: "Uviti", match: "Left" },
+      { term: "Arusin", match: "Rice" },
+      { term: "Akidi", match: "Beans" },
+      { term: "Meya ghen", match: "Excuse me" },
+      { term: "Agada", match: "Chair" },
+      { term: "Eknesi", match: "Bed" },
+      { term: "Isoma", match: "Clothes" },
+      { term: "Ídiom", match: "Food" }
+    ];
+
+    let dpr = window.devicePixelRatio || 1;
+    let width, height;
+
+    // High-DPI & Mobile Viewport Resizing
+    function resizeCanvas() {
+      width = container.clientWidth;
+      height = container.clientHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Game State
+    let state = {
+      score: 0,
+      lives: 3,
+      active: false,
+      currentPrompt: null,
+      asteroids: [],
+      lasers: [],
+      particles: [],
+      shipX: width / 2,
+      touchMovingLeft: false,
+      touchMovingRight: false,
+      lastSpawn: 0
+    };
+
+    // --- Direct Tap-to-Shoot Touch Mechanic ---
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const touchX = touch.clientX - rect.left;
+      const touchY = touch.clientY - rect.top;
+
+      // Check if player tapped directly on an asteroid
+      state.asteroids.forEach(ast => {
+        const dist = Math.hypot(ast.x - touchX, ast.y - touchY);
+        if (dist < ast.radius + 15) {
+          // Fire direct auto-aim laser to tapped target
+          fireLaserToTarget(ast.x, ast.y);
+        }
+      });
+    }, { passive: false });
+
+    // Touch Controls Wiring
+    const setupTouchButton = (id, startFn, endFn) => {
+      const btn = document.getElementById(id);
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); startFn(); }, { passive: false });
+      btn.addEventListener('touchend', (e) => { e.preventDefault(); endFn(); }, { passive: false });
+    };
+
+    setupTouchButton('left-btn', () => state.touchMovingLeft = true, () => state.touchMovingLeft = false);
+    setupTouchButton('right-btn', () => state.touchMovingRight = true, () => state.touchMovingRight = false);
+    setupTouchButton('fire-btn', () => fireLaser(), () => {});
+
+    // Web Audio API Synthesizer (Zero External Assets)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(freq, type, duration) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // Spawning & Round Logic
+    function nextQuestion() {
+      const randomIndex = Math.floor(Math.random() * vocabList.length);
+      state.currentPrompt = vocabList[randomIndex];
+      document.getElementById('prompt-text').textContent = state.currentPrompt.term;
+
+      // Generate options (1 correct, 2 distractors)
+      let options = [state.currentPrompt.match];
+      while (options.length < 3) {
+        let randMatch = vocabList[Math.floor(Math.random() * vocabList.length)].match;
+        if (!options.includes(randMatch)) options.push(randMatch);
+      }
+      options.sort(() => Math.random() - 0.5);
+
+      // Spawn asteroid targets
+      state.asteroids = options.map((text, idx) => ({
+        x: (width / 4) * (idx + 1),
+        y: -40 - (Math.random() * 50),
+        text: text,
+        speed: 0.8 + Math.random() * 0.4,
+        radius: 35,
+        isCorrect: text === state.currentPrompt.match
+      }));
+    }
+
+    function fireLaser() {
+      if (!state.active) return;
+      playTone(600, 'square', 0.1);
+      state.lasers.push({ x: state.shipX, y: height - 90, speed: 10 });
+    }
+
+    function fireLaserToTarget(targetX, targetY) {
+      if (!state.active) return;
+      playTone(700, 'square', 0.1);
+      const angle = Math.atan2(targetY - (height - 90), targetX - state.shipX);
+      state.lasers.push({
+        x: state.shipX,
+        y: height - 90,
+        vx: Math.cos(angle) * 12,
+        vy: Math.sin(angle) * 12
+      });
+    }
+
+    function createExplosion(x, y, color) {
+      for (let i = 0; i < 12; i++) {
+        state.particles.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6,
+          life: 1,
+          color
+        });
+      }
+    }
+
+    // Main Loop
+    function update() {
+      if (!state.active) return;
+
+      // Ship Movement
+      if (state.touchMovingLeft && state.shipX > 30) state.shipX -= 6;
+      if (state.touchMovingRight && state.shipX < width - 30) state.shipX += 6;
+
+      // Update Lasers
+      state.lasers.forEach((l, lIdx) => {
+        l.x += l.vx || 0;
+        l.y -= l.vy ? -l.vy : l.speed;
+
+        // Collision Checks
+        state.asteroids.forEach((ast, aIdx) => {
+          if (Math.hypot(l.x - ast.x, l.y - ast.y) < ast.radius) {
+            state.lasers.splice(lIdx, 1);
+            if (ast.isCorrect) {
+              playTone(800, 'sine', 0.2);
+              createExplosion(ast.x, ast.y, '#10b981');
+              state.score += 10;
+              document.getElementById('score-val').textContent = state.score;
+              nextQuestion();
+            } else {
+              playTone(150, 'sawtooth', 0.3);
+              createExplosion(ast.x, ast.y, '#ef4444');
+              state.lives -= 1;
+              document.getElementById('lives-val').textContent = state.lives;
+              state.asteroids.splice(aIdx, 1);
+              if (state.lives <= 0) endGame();
+            }
+          }
+        });
+      });
+
+      // Update Asteroids
+      state.asteroids.forEach(ast => {
+        ast.y += ast.speed;
+        if (ast.y > height - 60) {
+          if (ast.isCorrect) {
+            state.lives -= 1;
+            document.getElementById('lives-val').textContent = state.lives;
+            if (state.lives <= 0) endGame();
+            else nextQuestion();
+          } else {
+            ast.y = -40; // reset distractors
+          }
+        }
+      });
+
+      // Particles
+      state.particles.forEach((p, idx) => {
+        p.x += p.vx; p.y += p.vy; p.life -= 0.04;
+        if (p.life <= 0) state.particles.splice(idx, 1);
+      });
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, width, height);
+
+      if (!state.active) return;
+
+      // Render Ship
+      ctx.fillStyle = '#22d3ee';
+      ctx.beginPath();
+      ctx.moveTo(state.shipX, height - 90);
+      ctx.lineTo(state.shipX - 20, height - 60);
+      ctx.lineTo(state.shipX + 20, height - 60);
+      ctx.closePath();
+      ctx.fill();
+
+      // Render Lasers
+      ctx.fillStyle = '#ef4444';
+      state.lasers.forEach(l => ctx.fillRect(l.x - 2, l.y - 8, 4, 12));
+
+      // Render Asteroids
+      state.asteroids.forEach(ast => {
+        ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+        ctx.strokeStyle = '#6366f1';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(ast.x, ast.y, ast.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(ast.text, ast.x, ast.y);
+      });
+
+      // Render Particles
+      state.particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.fillRect(p.x, p.y, 4, 4);
+        ctx.globalAlpha = 1.0;
+      });
+
+      requestAnimationFrame(() => { update(); render(); });
+    }
+
+    function startGame() {
+      state.score = 0;
+      state.lives = 3;
+      state.active = true;
+      document.getElementById('score-val').textContent = '0';
+      document.getElementById('lives-val').textContent = '3';
+      document.getElementById('start-screen').classList.add('hidden');
+      document.getElementById('game-over-screen').classList.add('hidden');
+      state.shipX = width / 2;
+      nextQuestion();
+      render();
+    }
+
+    function endGame() {
+      state.active = false;
+      document.getElementById('final-score').textContent = state.score;
+      document.getElementById('game-over-screen').classList.remove('hidden');
+    }
+
+    document.getElementById('start-btn').addEventListener('click', startGame);
+    document.getElementById('restart-btn').addEventListener('click', startGame);
+  </script>
+</body>
+</html>
